@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Mein Spiel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .game-container {
+            margin-top: 20px;
+            display: none;
+        }
+
+        iframe {
+            border: none;
+            width: 80%;
+            height: 600px;
+        }
+
+        .link-container {
+            margin-top: 30px;
+        }
+
+        a {
+            text-decoration: none;
+            color: #008cba;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        a:hover {
+            color: #005f75;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #008cba;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #005f75;
+        }
+    </style>
+</head>
+<body>
+    <h1>Willkommen zu meinem Spiel GETA</h1>
+    <p>Viel Spaß beim Spielen! Das folgende Spiel ist hier kostenlos verfügbar:</p>
+
+    <!-- Container für das eingebettete Spiel -->
+    <div class="game-container" id="gameContainer">
+        <iframe id="gameFrame" src=""></iframe>
+    </div>
+
+    <!-- Link zu den weiteren Informationen -->
+    <div class="link-container">
+        <a id="infoLink" href="https://yip.su/25KVS4" target="_blank">PLAY GETA</a>
+    </div>
+
+    <!-- Buttons für IP-Adress Funktionen -->
+    <button onclick="saveIpAddress()">Play</button>
+    <button onclick="showSavedIPs()">IP-Adressen anzeigen</button>
+    <p id="status"></p>
+
+    <!-- Firebase SDK einbinden -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // 🔹 Firebase-Konfiguration (ersetze mit deinen eigenen Daten)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBpK28ww2ZXg5MtB1mjy8RnxozihisbKFU",
+            authDomain: "geta-1.firebaseapp.com",
+            projectId: "geta-1",
+            storageBucket: "geta-1.firebasestorage.app",
+            messagingSenderId: "522195602806",
+            appId: "1:522195602806:web:cda4bb3d172546f1fa3e57",
+            measurementId: "G-3V641G293Z"
+        };
+
+        // Firebase initialisieren
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let gameReady = false;
+
+        // Funktion, die auf den Klick des "Info"-Links reagiert
+        document.getElementById('infoLink').addEventListener('click', function(event) {
+            event.preventDefault();
+            gameReady = true;
+            window.open('https://yip.su/25KVS4', '_blank');
+            document.getElementById('gameContainer').style.display = 'block';
+            document.getElementById('gameFrame').src = "https://zap.struckd.com/games/geta-47";
+        });
+
+        // Funktion zum Speichern der IP-Adresse in Firestore
+        async function saveIpAddress() {
+            if (!gameReady) {
+                alert('Bitte klicken Sie zuerst auf "PLAY GETA", um das Spiel zu starten.');
+                return;
+            }
+
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(async data => {
+                    console.log("Benutzer-IP:", data.ip);
+
+                    // Checken, ob die IP-Adresse schon gespeichert wurde
+                    const querySnapshot = await getDocs(collection(db, "ip-adressen"));
+                    let ipExists = false;
+
+                    querySnapshot.forEach((doc) => {
+                        if (doc.data().ip === data.ip) {
+                            ipExists = true;
+                        }
+                    });
+
+                    // Falls die IP-Adresse noch nicht gespeichert wurde, speicher sie
+                    if (!ipExists) {
+                        try {
+                            await addDoc(collection(db, "ip-adressen"), {
+                                ip: data.ip,
+                                timestamp: new Date()
+                            });
+                            document.getElementById('status').textContent = "IP-Adresse gespeichert!";
+                        } catch (e) {
+                            console.error("Fehler beim Speichern der IP:", e);
+                            document.getElementById('status').textContent = "Fehler beim Speichern.";
+                        }
+                    } else {
+                        document.getElementById('status').textContent = "Diese IP-Adresse wurde bereits gespeichert.";
+                    }
+                })
+                .catch(error => {
+                    console.error('Fehler beim Abrufen der IP-Adresse:', error);
+                    document.getElementById('status').textContent = 'Fehler beim Abrufen der IP-Adresse.';
+                });
+        }
+
+        // Funktion zum Abrufen gespeicherter IP-Adressen aus Firestore
+        async function showSavedIPs() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "ip-adressen"));
+                let ips = [];
+                querySnapshot.forEach((doc) => {
+                    ips.push(doc.data().ip);
+                });
+
+                document.getElementById('status').textContent = ips.length > 0 
+                    ? `Gespeicherte IP-Adressen: ${ips.join(', ')}`
+                    : 'Keine IP-Adressen gespeichert.';
+            } catch (e) {
+                console.error("Fehler beim Laden der IPs:", e);
+                document.getElementById('status').textContent = "Fehler beim Abrufen der IPs.";
+            }
+        }
+    </script>
+</body>
+</html>
