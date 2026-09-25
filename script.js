@@ -101,7 +101,7 @@ function flightSimReal(){
  const controls=document.createElement("div");controls.className="flightSimControls";controls.innerHTML='<button data-fs="left">◀</button><button data-fs="up">▲</button><button data-fs="down">▼</button><button data-fs="right">▶</button>';b.appendChild(controls);
  const throttle=document.createElement("input");throttle.type="range";throttle.min="0";throttle.max="100";throttle.value="55";throttle.className="flightThrottle";b.appendChild(throttle);
  const msg=document.createElement("div");msg.className="flightMessage";msg.textContent="🛫 Echtes 3D-Flugzeug wird geladen …";b.appendChild(msg);
- const credit=document.createElement("div");credit.className="flightCredit";credit.textContent="3D aircraft: Poly by Google via Poly Pizza (CC BY)";b.appendChild(credit);
+ const credit=document.createElement("div");credit.className="flightCredit";credit.textContent="Aircraft models: amvlab/aircraft-models — CC BY 4.0";b.appendChild(credit);
  let px=0,py=.2,heading=0,alt=500,distance=0,alive=true,last=performance.now(),takeoff=false,landing=false;
  function steer(dx,dy){px=Math.max(-4.5,Math.min(4.5,px+dx));py=Math.max(-1.8,Math.min(3.2,py+dy))}
  controls.querySelector("[data-fs=left]").onpointerdown=()=>steer(-.45,0);controls.querySelector("[data-fs=right]").onpointerdown=()=>steer(.45,0);controls.querySelector("[data-fs=up]").onpointerdown=()=>steer(0,.28);controls.querySelector("[data-fs=down]").onpointerdown=()=>steer(0,-.28);
@@ -136,9 +136,9 @@ function loadRealGLB(url,group,done){
 }
 function addRealAirliners(world){
  const models=[
-  ["A320","https://raw.githubusercontent.com/amvlab/aircraft-models/main/models/A320_nologo.glb"],
-  ["A350","https://raw.githubusercontent.com/amvlab/aircraft-models/main/models/A350_nologo.glb"],
-  ["B737","https://raw.githubusercontent.com/amvlab/aircraft-models/main/models/B737_nologo.glb"]
+  ["A320","https://cdn.jsdelivr.net/gh/amvlab/aircraft-models@91d835e8e851b2317fe79af291c9fed6153fd525/models/A320_nologo.glb"],
+  ["A350","https://cdn.jsdelivr.net/gh/amvlab/aircraft-models@91d835e8e851b2317fe79af291c9fed6153fd525/models/A350_nologo.glb"],
+  ["B737","https://cdn.jsdelivr.net/gh/amvlab/aircraft-models@91d835e8e851b2317fe79af291c9fed6153fd525/models/B737_nologo.glb"]
  ];
  models.forEach((m,i)=>{
   const g=new THREE.Group();g.position.set(-12+i*12,1.8,-35-i*25);g.rotation.y=Math.PI;g.scale.setScalar(1);world.add(g);
