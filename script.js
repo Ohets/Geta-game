@@ -42,29 +42,38 @@ function boot3D(){if(!window.THREE)return;document.querySelectorAll(".threeStart
 
 let flightSimFrame;
 function flightSim(){
-  if(!THREE)return ensureThree(()=>flightSim());
-  stop3D();
-  const b=document.getElementById("flightSimBox"),g=make3D(b,{bg:0x74b9e8,fog:0x74b9e8});
-  g.camera.position.set(0,1.8,7);g.camera.rotation.order="YXZ";
-  const world=new THREE.Group();g.scene.add(world);
-  const ground=new THREE.Mesh(new THREE.PlaneGeometry(80,160),mat(0x3f8f45));ground.rotation.x=-Math.PI/2;ground.position.y=-2.2;ground.position.z=-35;world.add(ground);
-  for(let x=-35;x<=35;x+=5){for(let z=-80;z<10;z+=8){const tree=new THREE.Group();const trunk=cube([.22,.8,.22],0x70452b);trunk.position.y=-1.7;const crown=sphere(.7,0x237a3a);crown.position.y=-1.0;tree.add(trunk,crown);tree.position.set(x+(Math.random()-.5)*2,0,z+(Math.random()-.5)*3);world.add(tree)}}
-  const runway=cube([5,.05,45],0x555555);runway.position.set(0,-2.14,-35);world.add(runway);
-  for(let z=-5;z>-60;z-=5){const line=cube([.18,.03,2],0xffffff);line.position.set(0,-2.08,z);world.add(line)}
-  const plane=new THREE.Group();
-  const fus=cube([1.15,.35,2.3],0xffffff);const wings=cube([3.6,.12,.65],0x3366cc);const tail=cube([.75,.55,.35],0xffffff);
-  wings.position.z=.1;tail.position.z=1.0;plane.add(fus,wings,tail);plane.position.set(0,.4,4);g.scene.add(plane);
-  const hud=document.createElement("div");hud.className="flightHud";hud.innerHTML="ALT 1000 m<br>SPEED 180 km/h<br>HEADING 000°";b.appendChild(hud);
-  const controls=document.createElement("div");controls.className="flightSimControls";controls.innerHTML='<button data-fs="left">◀</button><button data-fs="up">▲</button><button data-fs="down">▼</button><button data-fs="right">▶</button>';b.appendChild(controls);
-  let px=0,py=.4,yaw=0,pitch=0,speed=.11,alt=1000,heading=0,alive=true;
-  function steer(dx,dy){px=Math.max(-3.5,Math.min(3.5,px+dx));py=Math.max(-1.3,Math.min(2.8,py+dy));plane.position.x=px;plane.position.y=py}
-  controls.querySelector('[data-fs="left"]').onpointerdown=()=>steer(-.45,0);
-  controls.querySelector('[data-fs="right"]').onpointerdown=()=>steer(.45,0);
-  controls.querySelector('[data-fs="up"]').onpointerdown=()=>steer(0,.3);
-  controls.querySelector('[data-fs="down"]').onpointerdown=()=>steer(0,-.3);
-  document.onkeydown=e=>{if(e.key==="ArrowLeft")steer(-.35,0);if(e.key==="ArrowRight")steer(.35,0);if(e.key==="ArrowUp")steer(0,.25);if(e.key==="ArrowDown")steer(0,-.25)};
-  let last=performance.now(),distance=0;
-  function end(){alive=false;stop3D();b.innerHTML='<strong>🛬 Flug beendet – '+Math.round(distance)+' km geflogen</strong><br><button onclick="flightSim()">Nochmal</button>'}
-  function loop(now){if(!alive)return;const dt=Math.min((now-last)/16,2);last=now;world.position.z+=speed*dt;distance+=speed*dt*.12;alt=700+py*180;heading=(heading+(px*.15))%360;plane.rotation.z=-px*.08;plane.rotation.x=-py*.05;hud.innerHTML="ALT "+Math.max(0,Math.round(alt))+" m<br>SPEED "+Math.round(150+speed*280)+" km/h<br>HEADING "+String(Math.round((heading+360)%360)).padStart(3,"0")+"°";if(py<-1.25||py>2.75)return end();g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
-  loop(performance.now());
+ if(!THREE)return ensureThree(()=>flightSim());
+ stop3D();
+ const b=document.getElementById("flightSimBox"),g=make3D(b,{bg:0x72b8e8,fog:0x72b8e8});
+ g.camera.position.set(0,2.0,8);
+ const world=new THREE.Group();g.scene.add(world);
+ const ground=new THREE.Mesh(new THREE.PlaneGeometry(100,220),mat(0x3f8f45));ground.rotation.x=-Math.PI/2;ground.position.set(0,-2.25,-70);ground.receiveShadow=true;world.add(ground);
+ const runway=cube([7,.06,65],0x4a4a4a);runway.position.set(0,-2.18,-8);runway.receiveShadow=true;world.add(runway);
+ for(let z=20;z>-55;z-=6){const line=cube([.25,.04,2.5],0xffffff);line.position.set(0,-2.1,z);world.add(line)}
+ for(let x=-35;x<=35;x+=7){for(let z=15;z>-120;z-=12){const t=cube([.25,.9,.25],0x70452b);const crown=sphere(.75,0x237a3a);const tree=new THREE.Group();t.position.y=-1.65;crown.position.y=-.8;tree.add(t,crown);tree.position.set(x+(Math.random()-.5)*2,0,z+(Math.random()-.5)*4);tree.scale.setScalar(.7+Math.random()*.7);world.add(tree)}}
+ for(let x=-28;x<=28;x+=14){const hill=sphere(5,0x507c4b);hill.scale.y=.5;hill.position.set(x,-.2,-80-Math.random()*25);world.add(hill)}
+ const clouds=new THREE.Group();for(let i=0;i<18;i++){const cl=new THREE.Group();for(let j=0;j<4;j++){const p=sphere(.7,0xffffff);p.position.set((Math.random()-.5)*1.6,Math.random()*.8,(Math.random()-.5)*1.4);cl.add(p)}cl.position.set((Math.random()-.5)*30,5+Math.random()*5,-15-Math.random()*90);cl.scale.setScalar(1+Math.random());clouds.add(cl)}world.add(clouds);
+ const plane=new THREE.Group();const fus=cube([1.05,.34,2.4],0xf4f4f4);const wings=cube([3.4,.1,.65],0x3267b1);const tail=cube([.65,.55,.3],0xf4f4f4);tail.position.z=1;plane.add(fus,wings,tail);plane.position.set(0,.2,5);plane.castShadow=true;g.scene.add(plane);
+ const cockpit=cube([.72,.28,.5],0x172b50);cockpit.position.set(0,.2,-.25);plane.add(cockpit);
+ const hud=document.createElement("div");hud.className="flightHud";b.appendChild(hud);
+ const controls=document.createElement("div");controls.className="flightSimControls";controls.innerHTML='<button data-fs="left">◀</button><button data-fs="up">▲</button><button data-fs="down">▼</button><button data-fs="right">▶</button>';b.appendChild(controls);
+ const throttle=document.createElement("input");throttle.type="range";throttle.min="0";throttle.max="100";throttle.value="55";throttle.className="flightThrottle";b.appendChild(throttle);
+ const msg=document.createElement("div");msg.className="flightMessage";msg.textContent="🛫 Startflug – halte das Flugzeug über der Landebahn";b.appendChild(msg);
+ let px=0,py=.2,pitch=0,roll=0,heading=0,speed=.055,alt=500,distance=0,alive=true,last=performance.now(),takeoff=false,landing=false;
+ function steer(dx,dy){px=Math.max(-4.5,Math.min(4.5,px+dx));py=Math.max(-1.8,Math.min(3.2,py+dy))}
+ controls.querySelector('[data-fs="left"]').onpointerdown=()=>steer(-.45,0);
+ controls.querySelector('[data-fs="right"]').onpointerdown=()=>steer(.45,0);
+ controls.querySelector('[data-fs="up"]').onpointerdown=()=>steer(0,.28);
+ controls.querySelector('[data-fs="down"]').onpointerdown=()=>steer(0,-.28);
+ document.onkeydown=e=>{if(e.key==="ArrowLeft")steer(-.35,0);if(e.key==="ArrowRight")steer(.35,0);if(e.key==="ArrowUp")steer(0,.22);if(e.key==="ArrowDown")steer(0,-.22);if(e.key==="w"||e.key==="W")throttle.value=Math.min(100,+throttle.value+5);if(e.key==="s"||e.key==="S")throttle.value=Math.max(0,+throttle.value-5)};
+ function end(text){alive=false;stop3D();b.innerHTML='<strong>'+text+'</strong><br><button onclick="flightSim()">Nochmal</button>'}
+ function loop(now){if(!alive)return;const dt=Math.min((now-last)/16,2);last=now;const power=+throttle.value;speed=.025+power*.00075;world.position.z+=speed*dt;distance+=speed*dt*.2;const targetAlt=takeoff?1800:Math.max(500,1800+py*650);alt+=(targetAlt-alt)*.015*dt;heading=(heading+px*.12*dt+360)%360;plane.position.x=px;plane.position.y=py;plane.rotation.z=-px*.07;plane.rotation.x=-py*.035;
+ if(!takeoff&&distance>1.2){takeoff=true;msg.textContent="🛫 Abgehoben! Steuere Höhe und Kurs mit den Pfeilen."}
+ if(takeoff&&distance>8&&distance<12){msg.textContent="☁️ Reiseflug – Wolken und Landschaft unter dir."}
+ if(takeoff&&distance>16){landing=true;msg.textContent="🛬 Landeanflug: zurück zur Landebahn!"}
+ if(landing&&distance>25){if(Math.abs(px)<1.1&&py>-1.7&&py<-.8&&power<35)end("🛬 Perfekte Landung!");else end("💥 Landung verpasst");}
+ if(py<-1.75||py>3.15)return end("⚠️ Flugzeug außer Kontrolle");
+ hud.innerHTML="ALT "+Math.round(alt)+" m<br>SPEED "+Math.round(140+power*2.2)+" km/h<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°<br>THR "+power+"%<br>DIST "+distance.toFixed(1)+" km";
+ g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
+ loop(performance.now());
 }
