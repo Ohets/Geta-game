@@ -96,10 +96,18 @@ function flightSimReal(){
  for(let z=35;z>-85;z-=6){const q=cube([.32,.04,2.8],0xffffff);q.position.set(0,-2.1,z);world.add(q)}
  const plane=new THREE.Group();plane.position.set(0,.2,5);g.scene.add(plane);
  const msg=document.createElement("div");msg.className="flightMessage";msg.textContent="🛫 3D-Simulator wird geladen …";b.appendChild(msg);
- const select=document.createElement("select");select.innerHTML='<option value="A320">✈️ A320</option><option value="A350">✈️ A350</option><option value="B737">✈️ B737</option>';select.style.cssText="position:absolute;right:10px;top:42px;z-index:12;padding:4px";b.appendChild(select);
+ const select=document.createElement("select");select.innerHTML='<option value="A320">✈️ A320</option><option value="A350">✈️ A350</option><option value="B737">✈️ B737</option><option value="A380">✈️ A380</option><option value="B787">✈️ B787</option><option value="EVTOL">🚁 EVTOL</option><option value="Drone">🚁 Drone</option>';select.style.cssText="position:absolute;right:10px;top:42px;z-index:12;padding:4px";b.appendChild(select);
  const controls=document.createElement("div");controls.className="flightSimControls";controls.innerHTML='<button data-fs="left">◀</button><button data-fs="up">▲</button><button data-fs="down">▼</button><button data-fs="right">▶</button>';b.appendChild(controls);
  const hud=document.createElement("div");hud.className="flightHud";b.appendChild(hud);
- const urls={A320:"assets/A320_nologo.glb",A350:"assets/A350_nologo.glb",B737:"assets/B737_nologo.glb"};
+ const urls={
+  A320:"assets/A320_nologo.glb",
+  A350:"assets/A350_nologo.glb",
+  B737:"assets/B737_nologo.glb",
+  A380:"https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/A380_nologo.glb",
+  B787:"https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/B787_nologo.glb",
+  EVTOL:"https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/EVTOL_nologo.glb",
+  Drone:"https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/drone_nologo.glb"
+};
  let selected="A320",px=0,py=.2,heading=0,alt=500,last=performance.now(),alive=true;
  function loadAircraft(){plane.clear();msg.textContent="🛫 "+selected+" wird geladen …";loadRealGLB(urls[selected],plane,ok=>msg.textContent=ok?"🟢 "+selected+" geladen":"🔴 GLB nicht geladen");}
  select.onchange=()=>{selected=select.value;loadAircraft()};
@@ -107,7 +115,7 @@ function flightSimReal(){
  controls.querySelector('[data-fs="right"]').onpointerdown=()=>px=Math.min(4.5,px+.45);
  controls.querySelector('[data-fs="up"]').onpointerdown=()=>py=Math.min(3.2,py+.28);
  controls.querySelector('[data-fs="down"]').onpointerdown=()=>py=Math.max(-1.8,py-.28);
- [["A320",-12,-20],["A350",12,-35],["B737",-12,-50]].forEach(a=>{const h=new THREE.Group();h.position.set(a[1],0,a[2]);world.add(h);loadRealGLB(urls[a[0]],h,ok=>{if(!ok)h.add(cube([2.5,.8,5],0x777777));});});
+ [["A320",-12,-20],["A350",12,-35],["B737",-12,-50],["A380",14,-65],["B787",-14,-80],["EVTOL",14,-95],["Drone",-14,-108]].forEach(a=>{const h=new THREE.Group();h.position.set(a[1],0,a[2]);world.add(h);loadRealGLB(urls[a[0]],h,ok=>{if(!ok)h.add(cube([2.5,.8,5],0x777777));});});
  function loop(now){if(!alive)return;const dt=Math.min((now-last)/16,2);last=now;world.position.z+=.045*dt;plane.position.x=px;plane.position.y=py;plane.rotation.z=-px*.07;plane.rotation.x=-py*.035;heading=(heading+px*.08*dt+360)%360;alt+=(500+py*500-alt)*.01*dt;hud.innerHTML="ALT "+Math.round(alt)+" m<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°";g.camera.position.set(0,2.6,8);g.camera.lookAt(0,.2,0);g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
  loadAircraft();loop(performance.now());
 }
