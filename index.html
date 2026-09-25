@@ -1,13 +1,15 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GETA Games</title><link rel="stylesheet" href="style.css"></head>
-<body><header><h1>🎮 GETA GAMES</h1><p>Spannende Mini-Games – direkt im Browser.</p></header>
+<body><header><h1>🎮 GETA GAMES</h1><p>Spannende Mini-Games – jetzt mit echten 3D-Objekten.</p></header>
 <main><div class="games">
-<article><button class="fullscreenBtn" type="button" onclick="toggleFullscreen(this)">⛶ Vollbild</button><h2>⚡ Reaction Rush</h2><p>Warte auf Grün und tippe so schnell wie möglich.</p><button onclick="reaction()">Start</button><div id="reactionResult"></div></article>
-<article><button class="fullscreenBtn" type="button" onclick="toggleFullscreen(this)">⛶ Vollbild</button><h2>🚀 Space Dodger</h2><p>Bewege dein Schiff und überlebe so lange wie möglich.</p><div class="gamebox" id="spaceBox"><button onclick="space()">Start</button></div></article>
-<article><button class="fullscreenBtn" type="button" onclick="toggleFullscreen(this)">⛶ Vollbild</button><h2>🧠 Memory Match</h2><p>Finde alle gleichen Paare.</p><div id="memoryResult"></div><button onclick="memory()">Start</button></article>
-<article><button class="fullscreenBtn" type="button" onclick="toggleFullscreen(this)">⛶ Vollbild</button><h2>🎯 Aim Challenge</h2><p>Triff 10 Ziele möglichst schnell.</p><div class="gamebox" id="aimBox"><button onclick="aim()">Start</button></div></article>
-<article><button class="fullscreenBtn" type="button" onclick="toggleFullscreen(this)">⛶ Vollbild</button><h2>✈️ Flappy Plane</h2><p>Fliege durch die Lücken und sammle Punkte.</p><div class="gamebox flappyBox" id="flappyBox"><button onclick="flappy()">Start</button></div></article>
-<article><button class="fullscreenBtn" type="button" onclick="toggleFullscreen(this)">⛶ Vollbild</button><h2>🏎️ Racing</h2><p>Weiche dem Verkehr aus und fahre so weit wie möglich.</p><div class="gamebox racingBox" id="racingBox"><button onclick="racing()">Start</button></div></article>
-<article><button class="fullscreenBtn" type="button" onclick="toggleFullscreen(this)">⛶ Vollbild</button><h2>🏓 Pong</h2><p>Spiele gegen den Computer – wer zuerst 5 Punkte hat.</p><div class="gamebox pongBox" id="pongBox"><button onclick="pong()">Start</button></div></article>
-<article><button class="fullscreenBtn" type="button" onclick="toggleFullscreen(this)">⛶ Vollbild</button><h2>✈️ 3D Flight</h2><p>Fliege durch die Ringe und weiche Hindernissen aus.</p><div class="gamebox flight3dBox" id="flight3dBox"><button onclick="flight3d()">Start</button></div></article>
-</div></main><script src="script.js"></script></body></html>
+<article><button class="fullscreenBtn" type="button" onclick="toggleFullscreen(this)">⛶ Vollbild</button><h2>⚡ Reaction Rush 3D</h2><p>Warte auf Grün und reagiere so schnell wie möglich.</p><button onclick="reaction()">Start</button><div class="gamebox reaction3dBox" id="reactionResult"></div></article>
+<article><button class="fullscreenBtn" type="button" onclick="toggleFullscreen(this)">⛶ Vollbild</button><h2>🚀 Space Dodger 3D</h2><p>Weiche echten 3D-Asteroiden aus.</p><div class="gamebox" id="spaceBox"><button onclick="space()">Start</button></div></article>
+<article><button class="fullscreenBtn" type="button" onclick="toggleFullscreen(this)">⛶ Vollbild</button><h2>🧠 Memory Match 3D</h2><p>Finde die 3D-Paare.</p><div class="gamebox memory3dBox" id="memoryResult"><button onclick="memory()">Start</button></div></article>
+<article><button class="fullscreenBtn" type="button" onclick="toggleFullscreen(this)">⛶ Vollbild</button><h2>🎯 Aim Challenge 3D</h2><p>Triff die 3D-Ziele möglichst schnell.</p><div class="gamebox" id="aimBox"><button onclick="aim()">Start</button></div></article>
+<article><button class="fullscreenBtn" type="button" onclick="toggleFullscreen(this)">⛵ Flappy Plane 3D</h2><p>Fliege mit einem 3D-Flugzeug durch die Hindernisse.</p><div class="gamebox flappyBox" id="flappyBox"><button onclick="flappy()">Start</button></div></article>
+<article><button class="fullscreenBtn" type="button" onclick="toggleFullscreen(this)">⛶ Vollbild</button><h2>🏎️ Racing 3D</h2><p>Fahre mit einem 3D-Rennwagen durch den Verkehr.</p><div class="gamebox racingBox" id="racingBox"><button onclick="racing()">Start</button></div></article>
+<article><button class="fullscreenBtn" type="button" onclick="toggleFullscreen(this)">⛶ Vollbild</button><h2>🏓 Pong 3D</h2><p>Schlage den 3D-Ball zurück – zuerst 5 Punkte.</p><div class="gamebox pongBox" id="pongBox"><button onclick="pong()">Start</button></div></article>
+<article><button class="fullscreenBtn" type="button" onclick="toggleFullscreen(this)">⛶ Vollbild</button><h2>✈️ 3D Flight</h2><p>Fliege durch echte 3D-Ringe und Hindernisse.</p><div class="gamebox flight3dBox" id="flight3dBox"><button onclick="flight3d()">Start</button></div></article>
+</div></main>
+<script src="https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.min.js"></script>
+<script src="script.js"></script></body></html>
