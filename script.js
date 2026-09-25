@@ -286,11 +286,11 @@ function loadRealGLB(url,group,done){
   // explicitly so they also work reliably on GitHub Pages.
   let fullUrl=url;
   if(/^assets\\//.test(url)){
-   fullUrl="https://raw.githubusercontent.com/Ohets/Geta-game/main/"+url;
+   fullUrl=new URL(url,window.location.href).href;
   }else{
    fullUrl=new URL(url,window.location.href).href;
   }
-  fullUrl+=(fullUrl.includes("?")?"&":"?")+"v=3";
+  
   loader.load(fullUrl,gltf=>{
    const model=gltf.scene;
    model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
@@ -331,30 +331,30 @@ function addRealAirliners(world){
 
 // EXTRA GLB SCENERY: airport vehicles, buildings and landmarks
 function addExtraAirportScenery(world){
- const assets=[
-  ["building","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_01_Art.glb",-28,0,-12,1.8],
-  ["vehicle","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Car_01_Art.glb",9,-1.3,-10,.8],
-  ["vehicle","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Car_02_Art.glb",-10,-1.3,-22,.8],
-  ["prop","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Container_01_Art.glb",15,-1.3,-30,1.1],
-  ["prop","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Crate_01_Art.glb",-14,-1.4,-35,1.2]
+ // Local GLB scenery: these files are part of this repository and work
+ // without external model hosts.
+ const localModels=[
+  ["A320","assets/A320_nologo.glb",-16,0,-18,1.0],
+  ["A350","assets/A350_nologo.glb",16,0,-28,.95],
+  ["B737","assets/B737_nologo.glb",-14,0,-42,.9],
+  ["A320","assets/A320_nologo.glb",14,0,-55,.85],
+  ["A350","assets/A350_nologo.glb",-22,0,-70,.8],
+  ["B737","assets/B737_nologo.glb",22,0,-82,.8]
  ];
- assets.forEach(a=>{
+ localModels.forEach(a=>{
   const g=new THREE.Group();
   g.position.set(a[2],a[3],a[4]);
   g.scale.setScalar(a[5]);
   world.add(g);
-  loadRealGLB(a[1],g,()=>{});
+  loadRealGLB(a[1],g,ok=>{
+   if(!ok){
+    const fallback=cube([2.8,.8,5],0x777777);
+    fallback.position.y=1;
+    g.add(fallback);
+   }
+  });
  });
- // More terrain objects, kept away from the runway for performance.
- for(let i=0;i<18;i++){
-  const g=new THREE.Group();
-  g.position.set((Math.random()<.5?-1:1)*(8+Math.random()*35),-1.8,-15-Math.random()*150);
-  g.scale.setScalar(.5+Math.random()*.8);
-  world.add(g);
-  loadRealGLB("https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Rock_01.glb",g,()=>{});
- }
 }
-
 function addRealAirport(world){
  const assets=[
   
