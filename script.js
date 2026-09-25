@@ -218,6 +218,16 @@ function flightSimReal(){
   const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);
   loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([1.5,.6,1.5],0x777777));});
  });
+
+ // Additional verified CC0 scenery from Kenney-based asset collection.
+ const CC0K="https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/main/";
+ const cc0Kenney=[
+  ["CC0 suburban house 1",CC0K+"buildings/kenney-city-kit-suburban/building_1.glb",-78,-2,-118,1.6],
+  ["CC0 suburban house 2",CC0K+"buildings/kenney-city-kit-suburban/building_2.glb",78,-2,-132,1.6],
+  ["CC0 modular building",CC0K+"buildings/kenney-modular-buildings/building_1.glb",-82,-2,-154,1.7],
+  ["CC0 tiny town building",CC0K+"buildings/kenney-tiny-town/building_1.glb",82,-2,-168,1.5]
+ ];
+ cc0Kenney.forEach(a=>{const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([1.5,.6,1.5],0x777777));});});
  // Tropical island-style flight scenery: water, islands, hills, roads, villages, bridges and vegetation.
  const water=new THREE.Mesh(new THREE.PlaneGeometry(700,700),mat(0x197aa3));
  water.rotation.x=-Math.PI/2;water.position.set(0,-2.35,-150);world.add(water);
