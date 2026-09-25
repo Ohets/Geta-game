@@ -275,6 +275,55 @@ function flightSimReal(){
 
 // REAL GLB AIRLINER MODELS
 let gltfLoaderPromise=null;
+
+// GLB memory/performance manager.
+// - Loads each URL only once and clones the already parsed scene for repeated objects.
+// - Limits simultaneous downloads so mobile devices do not receive dozens of GLBs at once.
+// - Disables expensive shadows on scenery objects.
+// - Keeps distant scenery from being rendered.
+// - Normalizes model size/center automatically.
+const glbCache=new Map();
+const glbQueue=[];
+let glbBusy=0;
+const GLB_MAX_CONCURRENT=2;
+const GLB_MAX_RENDER_DISTANCE=155;
+
+function optimizeGLBModel(model, options={}){
+ model.traverse(o=>{
+  if(o.isMesh){
+   o.castShadow=!!options.castShadow;
+   o.receiveShadow=false;
+   o.frustumCulled=true;
+   if(o.material){
+    const mats=Array.isArray(o.material)?o.material:[o.material];
+    mats.forEach(m=>{
+     if(m){
+      m.depthWrite=true;
+      m.needsUpdate=false;
+     }
+    });
+   }
+  }
+ });
+ return model;
+}
+function disposeGLBModel(model){
+ model.traverse(o=>{
+  if(o.isMesh){
+   if(o.geometry)o.geometry.dispose();
+   const mats=Array.isArray(o.material)?o.material:[o.material];
+   mats.forEach(m=>{if(m&&m.map)m.map.dispose();});
+  }
+ });
+}
+function processGLBQueue(){
+ while(glbBusy<GLB_MAX_CONCURRENT&&glbQueue.length){
+  const job=glbQueue.shift();glbBusy++;
+  job().finally(()=>{glbBusy--;processGLBQueue();});
+ }
+}
+function queueGLB(job){glbQueue.push(job);processGLBQueue();}
+
 function getGLTFLoader(){
  if(THREE&&THREE.GLTFLoader)return Promise.resolve(THREE.GLTFLoader);
  if(gltfLoaderPromise)return gltfLoaderPromise;
@@ -297,23 +346,41 @@ function getGLTFLoader(){
  });
  return gltfLoaderPromise;
 }
+
 function loadRealGLB(url,group,done){
  if(!THREE){done(false);return}
- getGLTFLoader().then(GLTFLoader=>{
+ const fullUrl=url.startsWith("assets/")?new URL(url,window.location.href).href:new URL(url,window.location.href).href;
+ const finish=model=>{
+  // Clone the parsed model instead of parsing/downloading the same GLB again.
+  const instance=model.clone(true);
+  optimizeGLBModel(instance,{castShadow:false});
+  group.add(instance);
+
+  // Distance-based rendering: objects far behind the aircraft are skipped.
+  instance.userData.glbOptimized=true;
+  instance.userData.glbMaxDistance=GLB_MAX_RENDER_DISTANCE;
+  const parent=group;
+  const originalRenderUpdate=instance.userData;
+  instance.userData.distanceCull=true;
+  done(true);
+ };
+
+ if(glbCache.has(fullUrl)){
+  const cached=glbCache.get(fullUrl);
+  if(cached.status==="ready"){finish(cached.model);return;}
+  cached.waiters.push(finish);return;
+ }
+
+ const entry={status:"loading",model:null,waiters:[]};
+ glbCache.set(fullUrl,entry);
+ entry.waiters.push(finish);
+
+ queueGLB(()=>getGLTFLoader().then(GLTFLoader=>new Promise((resolve,reject)=>{
   const loader=new GLTFLoader();
   loader.setCrossOrigin("anonymous");
-  // Local aircraft are stored in this repository. Use raw.githubusercontent.com
-  // explicitly so they also work reliably on GitHub Pages.
-  let fullUrl=url;
-  if(url.startsWith("assets/")){
-   fullUrl=new URL(url,window.location.href).href;
-  }else{
-   fullUrl=new URL(url,window.location.href).href;
-  }
-  
   loader.load(fullUrl,gltf=>{
    const model=gltf.scene;
-   model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+   optimizeGLBModel(model,{castShadow:false});
    const box=new THREE.Box3().setFromObject(model);
    const size=box.getSize(new THREE.Vector3());
    const max=Math.max(size.x,size.y,size.z);
@@ -321,17 +388,36 @@ function loadRealGLB(url,group,done){
    const box2=new THREE.Box3().setFromObject(model);
    const center=box2.getCenter(new THREE.Vector3());
    model.position.sub(center);
-   group.add(model);
-   done(true);
+   entry.status="ready";
+   entry.model=model;
+   const waiters=entry.waiters.splice(0);
+   waiters.forEach(fn=>fn(model));
+   resolve();
   },undefined,error=>{
+   glbCache.delete(fullUrl);
+   entry.waiters.splice(0);
    console.warn("3D-Modell konnte nicht geladen werden:",fullUrl,error);
-   done(false);
+   reject(error);
   });
- }).catch(error=>{
-  console.warn("GLTFLoader konnte nicht geladen werden:",error);
-  done(false);
+ })).catch(error=>{
+  console.warn("GLB-Ladefehler:",error);
+ }));
+}
+
+// Hide far scenery every frame without deleting the cached GLB from memory.
+// This saves GPU time while keeping loading smooth on phones.
+function updateGLBVisibility(root,aircraft){
+ if(!root||!aircraft)return;
+ root.traverse(o=>{
+  if(o.userData&&o.userData.distanceCull){
+   const p=new THREE.Vector3();
+   o.getWorldPosition(p);
+   const d=p.distanceTo(aircraft.getWorldPosition(new THREE.Vector3()));
+   o.visible=d<GLB_MAX_RENDER_DISTANCE;
+  }
  });
 }
+
 function addRealAirliners(world){
  const models=[
   ["A320","assets/A320_nologo.glb"],["A350","assets/A350_nologo.glb"],["B737","assets/B737_nologo.glb"],
