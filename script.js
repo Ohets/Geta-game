@@ -254,31 +254,63 @@ select.onchange=()=>{selected=select.value;loadSelectedAircraft()};
 
 
 // REAL GLB AIRLINER MODELS
-function loadRealGLB(url,group,done){
- if(!THREE)return done(false);
- if(!THREE.GLTFLoader){
-  const urls=["https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js","https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"];
+let gltfLoaderPromise=null;
+function getGLTFLoader(){
+ if(THREE&&THREE.GLTFLoader)return Promise.resolve(THREE.GLTFLoader);
+ if(gltfLoaderPromise)return gltfLoaderPromise;
+ gltfLoaderPromise=new Promise((resolve,reject)=>{
+  const urls=[
+   "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js",
+   "https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"
+  ];
   let i=0;
-  const loadLoader=()=>{
-   if(i>=urls.length){done(false);return}
-   const s=document.createElement("script");s.src=urls[i++];
-   s.onload=()=>loadRealGLB(url,group,done);
-   s.onerror=loadLoader;
-   document.head.appendChild(s);
-  };
-  loadLoader();return;
- }
- const loader=new THREE.GLTFLoader();loader.setCrossOrigin("anonymous");
- const fullUrl=new URL(url,window.location.href).href+"?v=2";
- loader.load(fullUrl,gltf=>{
+  function tryNext(){
+   if(THREE&&THREE.GLTFLoader)return resolve(THREE.GLTFLoader);
+   if(i>=urls.length)return reject(new Error("GLTFLoader konnte nicht geladen werden"));
+   const tag=document.createElement("script");
+   tag.src=urls[i++];
+   tag.onload=()=>THREE&&THREE.GLTFLoader?resolve(THREE.GLTFLoader):tryNext();
+   tag.onerror=tryNext;
+   document.head.appendChild(tag);
+  }
+  tryNext();
+ });
+ return gltfLoaderPromise;
+}
+function loadRealGLB(url,group,done){
+ if(!THREE){done(false);return}
+ getGLTFLoader().then(GLTFLoader=>{
+  const loader=new GLTFLoader();
+  loader.setCrossOrigin("anonymous");
+  // Local aircraft are stored in this repository. Use raw.githubusercontent.com
+  // explicitly so they also work reliably on GitHub Pages.
+  let fullUrl=url;
+  if(/^assets\\//.test(url)){
+   fullUrl="https://raw.githubusercontent.com/Ohets/Geta-game/main/"+url;
+  }else{
+   fullUrl=new URL(url,window.location.href).href;
+  }
+  fullUrl+=(fullUrl.includes("?")?"&":"?")+"v=3";
+  loader.load(fullUrl,gltf=>{
    const model=gltf.scene;
    model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
-   const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),max=Math.max(size.x,size.y,size.z);
+   const box=new THREE.Box3().setFromObject(model);
+   const size=box.getSize(new THREE.Vector3());
+   const max=Math.max(size.x,size.y,size.z);
    if(max>0)model.scale.multiplyScalar(3/max);
-   const box2=new THREE.Box3().setFromObject(model),center=box2.getCenter(new THREE.Vector3());
+   const box2=new THREE.Box3().setFromObject(model);
+   const center=box2.getCenter(new THREE.Vector3());
    model.position.sub(center);
-   group.add(model);done(true);
- },undefined,error=>{console.warn("3D-Modell konnte nicht geladen werden:",fullUrl,error);done(false)});
+   group.add(model);
+   done(true);
+  },undefined,error=>{
+   console.warn("3D-Modell konnte nicht geladen werden:",fullUrl,error);
+   done(false);
+  });
+ }).catch(error=>{
+  console.warn("GLTFLoader konnte nicht geladen werden:",error);
+  done(false);
+ });
 }
 function addRealAirliners(world){
  const models=[
