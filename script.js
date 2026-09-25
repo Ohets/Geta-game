@@ -120,11 +120,20 @@ window.flightSim=flightSimReal;
 function loadRealGLB(url,group,done){
  if(!THREE)return done(false);
  if(!THREE.GLTFLoader){
-  const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/loaders/GLTFLoader.js";
-  s.onload=()=>loadRealGLB(url,group,done);s.onerror=()=>done(false);document.head.appendChild(s);return;
+  const urls=["https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js","https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"];
+  let i=0;
+  const loadLoader=()=>{
+   if(i>=urls.length){done(false);return}
+   const s=document.createElement("script");s.src=urls[i++];
+   s.onload=()=>loadRealGLB(url,group,done);
+   s.onerror=loadLoader;
+   document.head.appendChild(s);
+  };
+  loadLoader();return;
  }
  const loader=new THREE.GLTFLoader();loader.setCrossOrigin("anonymous");
- loader.load(url,gltf=>{
+ const fullUrl=new URL(url,window.location.href).href+"?v=2";
+ loader.load(fullUrl,gltf=>{
    const model=gltf.scene;
    model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
    const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),max=Math.max(size.x,size.y,size.z);
@@ -132,7 +141,7 @@ function loadRealGLB(url,group,done){
    const box2=new THREE.Box3().setFromObject(model),center=box2.getCenter(new THREE.Vector3());
    model.position.sub(center);
    group.add(model);done(true);
- },undefined,error=>{console.warn("3D-Modell konnte nicht geladen werden:",url,error);done(false)});
+ },undefined,error=>{console.warn("3D-Modell konnte nicht geladen werden:",fullUrl,error);done(false)});
 }
 function addRealAirliners(world){
  const models=[
