@@ -123,13 +123,13 @@ function loadRealGLB(url,group,done){
   const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/loaders/GLTFLoader.js";
   s.onload=()=>loadRealGLB(url,group,done);s.onerror=()=>done(false);document.head.appendChild(s);return;
  }
- new THREE.GLTFLoader().load(url,gltf=>{group.add(gltf.scene);gltf.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});done(true)},undefined,()=>done(false));
+ const loader=new THREE.GLTFLoader();loader.setCrossOrigin("anonymous");loader.load(url,gltf=>{group.add(gltf.scene);gltf.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});done(true)},undefined,()=>done(false));
 }
 function addRealAirliners(world){
  const models=[
-  ["A320","https://raw.githubusercontent.com/amvlab/aircraft-models/main/models/A320_nologo.glb"],
-  ["A350","https://raw.githubusercontent.com/amvlab/aircraft-models/main/models/A350_nologo.glb"],
-  ["B737","https://raw.githubusercontent.com/amvlab/aircraft-models/main/models/B737_nologo.glb"]
+  ["A320","https://cdn.jsdelivr.net/gh/amvlab/aircraft-models@main/models/A320_nologo.glb"],
+  ["A350","https://cdn.jsdelivr.net/gh/amvlab/aircraft-models@main/models/A350_nologo.glb"],
+  ["B737","https://cdn.jsdelivr.net/gh/amvlab/aircraft-models@main/models/B737_nologo.glb"]
  ];
  models.forEach((m,i)=>{
   const g=new THREE.Group();g.position.set(-12+i*12,1.8,-35-i*25);g.rotation.y=Math.PI;g.scale.setScalar(.035);world.add(g);
@@ -141,8 +141,7 @@ function addRealAirliners(world){
 
 function addRealAirport(world){
  const assets=[
-  ["Tower","https://cdn.3dassets.dev/assets/28208/v1/model.glb",-12,-2,-22,.55],
-  ["Airfield","https://cdn.3dassets.dev/assets/26095/v1/model.glb",14,-2,-55,.12]
+  
  ];
  assets.forEach(a=>{
   const g=new THREE.Group();g.position.set(a[2],a[3],a[4]);g.scale.setScalar(a[5]);world.add(g);
