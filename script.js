@@ -123,16 +123,25 @@ function loadRealGLB(url,group,done){
   const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/loaders/GLTFLoader.js";
   s.onload=()=>loadRealGLB(url,group,done);s.onerror=()=>done(false);document.head.appendChild(s);return;
  }
- const loader=new THREE.GLTFLoader();loader.setCrossOrigin("anonymous");loader.load(url,gltf=>{group.add(gltf.scene);gltf.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});done(true)},undefined,()=>done(false));
+ const loader=new THREE.GLTFLoader();loader.setCrossOrigin("anonymous");
+ loader.load(url,gltf=>{
+   const model=gltf.scene;
+   model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+   const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),max=Math.max(size.x,size.y,size.z);
+   if(max>0)model.scale.multiplyScalar(3/max);
+   const box2=new THREE.Box3().setFromObject(model),center=box2.getCenter(new THREE.Vector3());
+   model.position.sub(center);
+   group.add(model);done(true);
+ },undefined,error=>{console.warn("3D-Modell konnte nicht geladen werden:",url,error);done(false)});
 }
 function addRealAirliners(world){
  const models=[
-  ["A320","https://cdn.jsdelivr.net/gh/amvlab/aircraft-models@main/models/A320_nologo.glb"],
-  ["A350","https://cdn.jsdelivr.net/gh/amvlab/aircraft-models@main/models/A350_nologo.glb"],
-  ["B737","https://cdn.jsdelivr.net/gh/amvlab/aircraft-models@main/models/B737_nologo.glb"]
+  ["A320","https://raw.githubusercontent.com/amvlab/aircraft-models/main/models/A320_nologo.glb"],
+  ["A350","https://raw.githubusercontent.com/amvlab/aircraft-models/main/models/A350_nologo.glb"],
+  ["B737","https://raw.githubusercontent.com/amvlab/aircraft-models/main/models/B737_nologo.glb"]
  ];
  models.forEach((m,i)=>{
-  const g=new THREE.Group();g.position.set(-12+i*12,1.8,-35-i*25);g.rotation.y=Math.PI;g.scale.setScalar(.035);world.add(g);
+  const g=new THREE.Group();g.position.set(-12+i*12,1.8,-35-i*25);g.rotation.y=Math.PI;g.scale.setScalar(1);world.add(g);
   loadRealGLB(m[1],g,ok=>{if(ok){const label=addText(world,m[0],g.position.x,g.position.y+2,g.position.z,.5);label.material.opacity=.75}});
  });
 }
