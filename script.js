@@ -102,31 +102,30 @@ function flightSimReal(){
  for(let z=32;z>-85;z-=4){[-4.25,4.25].forEach(x=>{const l=cube([.10,.10,.28],0xffffcc);l.position.set(x,-2.05,z);l.userData.light=true;world.add(l)})}
  for(let z=30;z>-80;z-=8){const l=cube([.18,.06,.45],0xffdd66);l.position.set(11,-2.04,z);world.add(l)}
  for(let x=-4;x<=4;x+=1.3){const mark=cube([.18,.05,4],0xffffff);mark.position.set(x,-2.08,-2);world.add(mark)}
- // terminal and hangars
- function building(x,y,z,w,h,d,color){
-  const q=cube([w,h,d],color);q.position.set(x,y,z);q.castShadow=true;world.add(q);
-  const roof=cube([w+.3,.18,d+.3],0x555b63);roof.position.set(x,y+h/2+.09,z);world.add(roof);
-  for(let xx=-w/2+1;xx<w/2;xx+=1.7){const win=cube([.9,h*.35,.03],0x5db4d9);win.position.set(x+xx,y+.15,z-d/2-.02);world.add(win)}
-  return q;
+ // REAL GLB AIRPORT SCENERY (CC0 assets)
+ const realAirportAssets=[
+  ["terminal","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Platform_01_Art.glb",18,0,-15,1.5],
+  ["hangar","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Iron_Structure_01_Art.glb",-18,0,-28,1.2],
+  ["tower","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/TowerStation_Ground_Art.glb",27,-1,-25,1.1],
+  ["tower top","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Tower_Station_01_Art.glb",27,1,-25,.55]
+ ];
+ realAirportAssets.forEach(a=>{
+  const g=new THREE.Group();g.position.set(a[2],a[3],a[4]);g.scale.setScalar(a[5]);world.add(g);
+  loadRealGLB(a[1],g,ok=>{if(!ok)console.warn("Airport-GLB nicht geladen:",a[0]);});
+ });
+ // GLB vegetation and scenery props
+ const plantUrl="https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Plant_02_Art.glb";
+ const rockUrl="https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Rock_01.glb";
+ for(let i=0;i<24;i++){
+  const g=new THREE.Group();g.position.set((Math.random()-.5)*130,0,-35-Math.random()*180);g.scale.setScalar(.7+Math.random()*.8);world.add(g);
+  loadRealGLB(i%4===0?rockUrl:plantUrl,g,()=>{});
  }
- building(18,1.0,-15,12,6,10,0x8b9098);
- building(18,0.5,-31,9,5,12,0x777d86);
- building(-18,0.4,-28,13,4,9,0x70767d);
- const tower=cube([2.2,10,2.2],0x6c7278);tower.position.set(27,2.8,-25);world.add(tower);
- const cab=sphere(1.6,0x9aa0a8);cab.scale.y=.65;cab.position.set(27,8,-25);world.add(cab);
- // hills, trees
- for(let x=-70;x<=70;x+=14){const hill=sphere(7,0x507c4b);hill.scale.y=.55;hill.position.set(x,-.1,-105-Math.random()*70);world.add(hill)}
- for(let i=0;i<70;i++){
-  const tree=new THREE.Group(),tr=cube([.22,1.1,.22],0x70452b),cr=sphere(.75,0x237a3a);
-  tr.position.y=-1.65;cr.position.y=-.8;tree.add(tr,cr);
-  tree.position.set((Math.random()-.5)*150,0,-25-Math.random()*230);
-  tree.scale.setScalar(.6+Math.random()*.8);world.add(tree);
+ // GLB cloud objects
+ const cloudUrl="https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Plant_01_Art.glb";
+ for(let i=0;i<8;i++){
+  const g=new THREE.Group();g.position.set((Math.random()-.5)*55,7+Math.random()*7,-25-Math.random()*150);g.scale.setScalar(1.2+Math.random()*1.4);world.add(g);
+  loadRealGLB(cloudUrl,g,()=>{});
  }
- // clouds
- const clouds=new THREE.Group();
- for(let i=0;i<22;i++){const cl=new THREE.Group();for(let j=0;j<4;j++){const p=sphere(.7,0xffffff);p.position.set((Math.random()-.5)*1.7,Math.random()*.8,(Math.random()-.5)*1.5);cl.add(p)}cl.position.set((Math.random()-.5)*50,6+Math.random()*6,-25-Math.random()*170);cl.scale.setScalar(1+Math.random());clouds.add(cl)}
- world.add(clouds);
-
  // PLAYER AIRCRAFT
  const plane=new THREE.Group();plane.position.set(0,.2,5);g.scene.add(plane);
  const hud=document.createElement("div");hud.className="flightHud";b.appendChild(hud);
@@ -142,17 +141,19 @@ function flightSimReal(){
  const systems=document.createElement("div");systems.style.cssText="position:absolute;right:10px;bottom:62px;z-index:12;display:flex;gap:4px";systems.innerHTML='<button id="gearBtn">⚙️ Fahrwerk</button><button id="flapBtn">🪽 Klappen</button><button id="brakeBtn">🛑 Bremse</button>';b.appendChild(systems);
  const mission=document.createElement("div");mission.style.cssText="position:absolute;left:10px;top:78px;z-index:11;font:700 10px monospace;background:#0008;padding:4px 6px;border-radius:5px;max-width:220px";b.appendChild(mission);
 
- // CAMERA VIEWS + SIMPLE COCKPIT/CABIN
+ // CAMERA VIEWS + GLB COCKPIT/CABIN
  const viewBox=document.createElement("div");viewBox.style.cssText="position:absolute;left:10px;top:110px;z-index:12;display:flex;gap:3px;flex-wrap:wrap";viewBox.innerHTML='<button data-view="cockpit">🧑‍✈️ Cockpit</button><button data-view="chase">✈️ Außen</button><button data-view="wing">🪽 Flügel</button><button data-view="cabin">🪑 Kabine</button>';b.appendChild(viewBox);
  let viewMode="chase";
- const cockpit=new THREE.Group();
- const dash=cube([3.8,.45,.7],0x20252b);dash.position.set(0,-.35,-.9);cockpit.add(dash);
- for(let x=-1.4;x<=1.4;x+=.7){const screen=cube([.5,.3,.06],0x102a35);screen.position.set(x,-.05,-1.25);cockpit.add(screen)}
- const yokeL=cube([.12,.8,.12],0x222222),yokeR=yokeL.clone();yokeL.position.set(-.8,-.05,-.55);yokeR.position.set(.8,-.05,-.55);cockpit.add(yokeL,yokeR);
- const windshield=cube([5,.04,2.2],0x162b3b);windshield.position.set(0,1.0,-2.0);cockpit.add(windshield);cockpit.visible=false;g.scene.add(cockpit);
- const cabin=new THREE.Group();const cabinFloor=cube([4.5,.12,9],0x343434);cabinFloor.position.y=-1.7;cabin.add(cabinFloor);
- for(let z=-3.5;z<=3.5;z+=2){for(let x=-1.4;x<=1.4;x+=1.4){const seat=cube([.8,1.2,.8],0x315b7a);seat.position.set(x,-.9,z);cabin.add(seat)}}
- const cabinRoof=cube([4.5,.12,9],0xe2e2e2);cabinRoof.position.y=1.8;cabin.add(cabinRoof);cabin.visible=false;g.scene.add(cabin);
+ const cockpit=new THREE.Group();cockpit.visible=false;g.scene.add(cockpit);
+ const cabin=new THREE.Group();cabin.visible=false;g.scene.add(cabin);
+ const cockpitUrl="https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Tower_Station_CallerButton_Art.glb";
+ const cabinSeatUrl="https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Bench_01.glb";
+ loadRealGLB(cockpitUrl,cockpit,()=>{});
+ for(let z=-4;z<=4;z+=2){
+  for(let x=-1.5;x<=1.5;x+=1.5){
+   const seat=new THREE.Group();seat.position.set(x,-.8,z);seat.scale.setScalar(.7);cabin.add(seat);loadRealGLB(cabinSeatUrl,seat,()=>{});
+  }
+ }
  function setView(v){viewMode=v;cockpit.visible=v==="cockpit";cabin.visible=v==="cabin";}
  viewBox.querySelectorAll("button").forEach(btn=>btn.onpointerdown=()=>setView(btn.dataset.view));
 
