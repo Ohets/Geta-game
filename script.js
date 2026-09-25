@@ -156,6 +156,10 @@ function flightSimReal(){
  }
  function setView(v){viewMode=v;cockpit.visible=v==="cockpit";cabin.visible=v==="cabin";}
  viewBox.querySelectorAll("button").forEach(btn=>btn.onpointerdown=()=>setView(btn.dataset.view));
+const resetView=document.createElement("button");
+resetView.textContent="🎥 Reset";
+resetView.onpointerdown=()=>setView("chase");
+viewBox.appendChild(resetView);
 
  // INSTRUMENTS
  const inst=document.createElement("div");inst.style.cssText="position:absolute;right:10px;bottom:108px;z-index:12;font:700 10px monospace;background:#0009;padding:5px;border-radius:6px;min-width:125px";b.appendChild(inst);
@@ -190,10 +194,26 @@ function flightSimReal(){
  document.getElementById("gearBtn").onpointerdown=()=>{gear=!gear;document.getElementById("gearBtn").textContent=gear?"⚙️ Fahrwerk":"⚙️ UP"};
  document.getElementById("flapBtn").onpointerdown=()=>{flaps=!flaps;document.getElementById("flapBtn").textContent=flaps?"🪽 OUT":"🪽 Klappen"};
  document.getElementById("brakeBtn").onpointerdown=()=>{brake=true;setTimeout(()=>brake=false,1500)};
- select.onchange=()=>{selected=select.value;plane.clear();loadRealGLB("assets/"+selected+"_nologo.glb",plane,ok=>msg.textContent=ok?"🟢 "+selected+" geladen":"🔴 "+selected+" konnte nicht geladen werden")};
+ const aircraftUrls={
+  A320:"assets/A320_nologo.glb",
+  A350:"assets/A350_nologo.glb",
+  B737:"assets/B737_nologo.glb",
+  A380:"https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/A380_nologo.glb",
+  B787:"https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/B787_nologo.glb",
+  EVTOL:"https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/EVTOL_nologo.glb",
+  drone:"https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/drone_nologo.glb"
+};
+function loadSelectedAircraft(){
+  const url=aircraftUrls[selected]||aircraftUrls.A320;
+  plane.clear();
+  loadRealGLB(url,plane,ok=>{
+    msg.textContent=ok?"🟢 "+selected+" geladen":"🔴 "+selected+" konnte nicht geladen werden";
+  });
+}
+select.onchange=()=>{selected=select.value;loadSelectedAircraft()};
 
  function end(t){alive=false;stop3D();b.innerHTML="<strong>"+t+" – Punkte: "+score+"</strong><br><button onclick=\"flightSim()\">Nochmal</button>"}
- loadRealGLB("assets/A320_nologo.glb",plane,ok=>{if(ok)msg.textContent="🟢 A320 geladen – Startbereit";else msg.textContent="🔴 A320 konnte nicht geladen werden"});
+ loadSelectedAircraft();
 
  function loop(now){
   if(!alive)return;
