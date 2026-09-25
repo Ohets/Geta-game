@@ -116,6 +116,26 @@ function flightSimReal(){
  controls.querySelector('[data-fs="up"]').onpointerdown=()=>py=Math.min(3.2,py+.28);
  controls.querySelector('[data-fs="down"]').onpointerdown=()=>py=Math.max(-1.8,py-.28);
  [["A320",-12,-20],["A350",12,-35],["B737",-12,-50],["A380",14,-65],["B787",-14,-80],["EVTOL",14,-95],["Drone",-14,-108]].forEach(a=>{const h=new THREE.Group();h.position.set(a[1],0,a[2]);world.add(h);loadRealGLB(urls[a[0]],h,ok=>{if(!ok)h.add(cube([2.5,.8,5],0x777777));});});
+ // Additional GLB airport and city scenery. Each model is isolated in its own group so a failed remote model cannot stop the game.
+ const sceneryUrls=[
+  ["Hangar","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_01_Art.glb",-22,-2,-18,2.5],
+  ["Airport building","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_02_Art.glb",22,-2,-28,2.2],
+  ["Terminal","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_03_Art.glb",-24,-2,-52,2.2],
+  ["Hangar 2","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_04_Art.glb",24,-2,-62,2.3],
+  ["City building 1","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_05_Art.glb",-35,-2,-95,2],
+  ["City building 2","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_06_Art.glb",-22,-2,-105,2],
+  ["City building 3","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_07_Art.glb",25,-2,-110,2],
+  ["City building 4","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_08_Art.glb",38,-2,-125,2],
+  ["City building 5","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_09_Art.glb",-38,-2,-130,2],
+  ["Vehicle","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Car_01_Art.glb",-10,-2,-38,1.2],
+  ["Vehicle 2","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Car_02_Art.glb",10,-2,-45,1.2],
+  ["Container","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Container_01_Art.glb",-28,-2,-38,1.5],
+  ["Crate","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Crate_01_Art.glb",28,-2,-42,1.5]
+ ];
+ sceneryUrls.forEach(a=>{
+  const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);
+  loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([2,.8,2],0x777777));});
+ });
  function loop(now){if(!alive)return;const dt=Math.min((now-last)/16,2);last=now;world.position.z+=.045*dt;plane.position.x=px;plane.position.y=py;plane.rotation.z=-px*.07;plane.rotation.x=-py*.035;heading=(heading+px*.08*dt+360)%360;alt+=(500+py*500-alt)*.01*dt;hud.innerHTML="ALT "+Math.round(alt)+" m<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°";g.camera.position.set(0,2.6,8);g.camera.lookAt(0,.2,0);g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
  loadAircraft();loop(performance.now());
 }
