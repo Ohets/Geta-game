@@ -171,7 +171,7 @@ viewBox.appendChild(resetView);
   const tg=new THREE.Group();tg.position.set(v[1],v[2],v[3]);world.add(tg);traffic.push({g:tg,phase:i*2,baseX:v[1],baseY:v[2],baseZ:v[3]});
   loadRealGLB(v[4],tg,ok=>{tg.scale.setScalar(.65);tg.rotation.y=Math.PI});
  });
- addRealAirliners(world);
+ addRealAirliners(world);\n addExtraAirportScenery(world);
 
  // RAIN PARTICLES
  const rainGeo=new THREE.BufferGeometry(),rainCount=260, rainPos=new Float32Array(rainCount*3);
@@ -295,6 +295,33 @@ function addRealAirliners(world){
 }
 
 
+
+
+// EXTRA GLB SCENERY: airport vehicles, buildings and landmarks
+function addExtraAirportScenery(world){
+ const assets=[
+  ["building","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_01_Art.glb",-28,0,-12,1.8],
+  ["vehicle","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Car_01_Art.glb",9,-1.3,-10,.8],
+  ["vehicle","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Car_02_Art.glb",-10,-1.3,-22,.8],
+  ["prop","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Container_01_Art.glb",15,-1.3,-30,1.1],
+  ["prop","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Crate_01_Art.glb",-14,-1.4,-35,1.2]
+ ];
+ assets.forEach(a=>{
+  const g=new THREE.Group();
+  g.position.set(a[2],a[3],a[4]);
+  g.scale.setScalar(a[5]);
+  world.add(g);
+  loadRealGLB(a[1],g,()=>{});
+ });
+ // More terrain objects, kept away from the runway for performance.
+ for(let i=0;i<18;i++){
+  const g=new THREE.Group();
+  g.position.set((Math.random()<.5?-1:1)*(8+Math.random()*35),-1.8,-15-Math.random()*150);
+  g.scale.setScalar(.5+Math.random()*.8);
+  world.add(g);
+  loadRealGLB("https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Rock_01.glb",g,()=>{});
+ }
+}
 
 function addRealAirport(world){
  const assets=[
