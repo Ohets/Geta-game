@@ -173,7 +173,7 @@ function flightSimReal(){
  }
  loop(performance.now());
 }
-window.flightSim=flightSimReal;
+;window.flightSim=flightSimReal;
 
 
 // REAL GLB AIRLINER MODELS
