@@ -94,6 +94,7 @@ function flightSimReal(){
  const runway=cube([7,.06,65],0x4a4a4a);runway.position.set(0,-2.18,-8);world.add(runway);
  for(let z=20;z>-55;z-=6){const q=cube([.25,.04,2.5],0xffffff);q.position.set(0,-2.1,z);world.add(q)}
  for(let x=-35;x<=35;x+=7)for(let z=15;z>-120;z-=12){const t=cube([.25,.9,.25],0x70452b),c=sphere(.75,0x237a3a),tree=new THREE.Group();t.position.y=-1.65;c.position.y=-.8;tree.add(t,c);tree.position.set(x+(Math.random()-.5)*2,0,z+(Math.random()-.5)*4);tree.scale.setScalar(.8+Math.random()*.5);world.add(tree)}
+ addRealAirliners(world);
  const plane=new THREE.Group();plane.position.set(0,.2,5);g.scene.add(plane);const fallback=cube([1.05,.34,2.4],0xf4f4f4);plane.add(fallback);
  const hud=document.createElement("div");hud.className="flightHud";b.appendChild(hud);
  const controls=document.createElement("div");controls.className="flightSimControls";controls.innerHTML='<button data-fs="left">◀</button><button data-fs="up">▲</button><button data-fs="down">▼</button><button data-fs="right">▶</button>';b.appendChild(controls);
