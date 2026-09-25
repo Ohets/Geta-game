@@ -1,1 +1,9 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GETA Games</title><link rel="stylesheet" href="style.css"></head><body><header><h1>🎮 GETA GAMES</h1><p>Spannende Browser-Games – direkt spielen.</p></header><main><div class="games"><article><h2>⚡ Reaction Rush</h2><p>Teste deine Reaktionszeit.</p><button onclick="reaction()">Spielen</button><div id="reactionResult"></div></article><article><h2>🚀 Space Dodger</h2><p>Weiche den Hindernissen aus.</p><button onclick="space()">Spielen</button><div id="spaceResult"></div></article><article><h2>🧠 Memory Match</h2><p>Finde die gleichen Paare.</p><button onclick="memory()">Spielen</button><div id="memoryResult"></div></article><article><h2>🎯 Aim Challenge</h2><p>Wie schnell triffst du das Ziel?</p><button onclick="aim()">Spielen</button><div id="aimResult"></div></article></div></main><script src="script.js"></script></body></html>
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GETA Games</title><link rel="stylesheet" href="style.css"></head>
+<body><header><h1>🎮 GETA GAMES</h1><p>Spannende Mini-Games – direkt im Browser.</p></header>
+<main><div class="games">
+<article><h2>⚡ Reaction Rush</h2><p>Warte auf Grün und tippe so schnell wie möglich.</p><button onclick="reaction()">Start</button><div id="reactionResult"></div></article>
+<article><h2>🚀 Space Dodger</h2><p>Bewege dein Schiff und überlebe so lange wie möglich.</p><div class="gamebox" id="spaceBox"><button onclick="space()">Start</button></div></article>
+<article><h2>🧠 Memory Match</h2><p>Finde alle gleichen Paare.</p><div id="memoryResult"></div><button onclick="memory()">Start</button></article>
+<article><h2>🎯 Aim Challenge</h2><p>Triff 10 Ziele möglichst schnell.</p><div class="gamebox" id="aimBox"><button onclick="aim()">Start</button></div></article>
+</div></main><script src="script.js"></script></body></html>
