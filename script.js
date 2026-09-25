@@ -119,7 +119,18 @@ function flightSimReal(){
  const select=document.createElement("select");select.innerHTML='<option value="A320">✈️ A320</option><option value="A350">✈️ A350</option><option value="B737">✈️ B737</option>';select.style.cssText="position:absolute;right:10px;top:42px;z-index:12;padding:4px;border-radius:6px";b.appendChild(select);
  const fuelBox=document.createElement("div");fuelBox.style.cssText="position:absolute;right:10px;top:72px;z-index:11;font:700 11px monospace;background:#0008;padding:4px 6px;border-radius:5px";b.appendChild(fuelBox);
  const scoreBox=document.createElement("div");scoreBox.style.cssText="position:absolute;left:10px;bottom:62px;z-index:11;font:700 11px monospace;background:#0008;padding:4px 6px;border-radius:5px";b.appendChild(scoreBox);
- const credit=document.createElement("div");credit.className="flightCredit";credit.textContent="Aircraft models: amvlab/aircraft-models — CC BY 4.0";b.appendChild(credit);
+ const viewBox=document.createElement("div");viewBox.style.cssText="position:absolute;left:10px;top:110px;z-index:12;display:flex;gap:3px;flex-wrap:wrap";viewBox.innerHTML='<button data-view="cockpit">🧑‍✈️ Cockpit</button><button data-view="chase">✈️ Außen</button><button data-view="wing">🪽 Flügel</button><button data-view="cabin">🪑 Kabine</button>';b.appendChild(viewBox);
+ let viewMode="chase";
+ const cockpit=new THREE.Group();
+ const dash=cube([3.8,.45,.7],0x20252b);dash.position.set(0,-.35,-.9);cockpit.add(dash);
+ for(let x=-1.4;x<=1.4;x+=.7){const screen=cube([.5,.3,.06],0x102a35);screen.position.set(x,-.05,-1.25);cockpit.add(screen)}
+ const yokeL=cube([.12,.8,.12],0x222222),yokeR=yokeL.clone();yokeL.position.set(-.8,-.05,-.55);yokeR.position.set(.8,-.05,-.55);cockpit.add(yokeL,yokeR);
+ const windshield=cube([5,.04,2.2],0x162b3b);windshield.position.set(0,1.0,-2.0);cockpit.add(windshield);cockpit.visible=false;g.scene.add(cockpit);
+ const cabin=new THREE.Group();const cabinFloor=cube([4.5,.12,8],0x343434);cabinFloor.position.y=-1.7;cabin.add(cabinFloor);
+ for(let z=-3;z<=3;z+=2){for(let x=-1.4;x<=1.4;x+=1.4){const seat=cube([.8,1.2,.8],0x315b7a);seat.position.set(x,-.9,z);cabin.add(seat)}} 
+ const cabinRoof=cube([4.5,.12,8],0xe2e2e2);cabinRoof.position.y=1.8;cabin.add(cabinRoof);cabin.visible=false;g.scene.add(cabin);
+ function setView(v){viewMode=v;cockpit.visible=v==="cockpit";cabin.visible=v==="cabin";}
+ viewBox.querySelectorAll("button").forEach(btn=>btn.onpointerdown=()=>setView(btn.dataset.view)); const credit=document.createElement("div");credit.className="flightCredit";credit.textContent="Aircraft models: amvlab/aircraft-models — CC BY 4.0";b.appendChild(credit);
  const mission=document.createElement("div");mission.style.cssText="position:absolute;left:10px;top:78px;z-index:11;font:700 11px monospace;background:#0008;padding:4px 6px;border-radius:5px";b.appendChild(mission);
  const weather=document.createElement("select");weather.innerHTML='<option value="clear">☀️ Klar</option><option value="rain">🌧️ Regen</option><option value="night">🌙 Nacht</option>';weather.style.cssText="position:absolute;right:10px;top:104px;z-index:12;padding:4px;border-radius:6px";b.appendChild(weather);
  const systems=document.createElement("div");systems.style.cssText="position:absolute;right:10px;bottom:62px;z-index:12;display:flex;gap:4px";systems.innerHTML='<button id="gearBtn">⚙️</button><button id="flapBtn">🪽</button><button id="brakeBtn">🛑</button>';b.appendChild(systems);
@@ -138,6 +149,10 @@ function flightSimReal(){
   if(!alive)return;const dt=Math.min((now-last)/16,2);last=now;const power=+throttle.value;
   const speed=.025+power*.00075;world.position.z+=speed*dt;distance+=speed*dt*.2;
   fuel=Math.max(0,fuel-power*.0012*dt);if(fuel<=0)return end("⛽ Treibstoff leer");
+  if(viewMode==="cockpit"){g.camera.position.set(0,1.0,2.7);g.camera.lookAt(0,.6,-4)}
+  else if(viewMode==="wing"){g.camera.position.set(4.2,1.0,3.0);g.camera.lookAt(0,.2,-8)}
+  else if(viewMode==="cabin"){g.camera.position.set(0,.35,2.2);g.camera.lookAt(0,.2,-5)}
+  else {g.camera.position.set(0,2.4,8);g.camera.lookAt(0,.2,0)}
   const targetAlt=takeoff?1800:Math.max(500,1800+py*650);alt+=(targetAlt-alt)*.015*dt;
   heading=(heading+px*.12*dt+360)%360;plane.position.x=px;plane.position.y=py;plane.rotation.z=-px*.07;plane.rotation.x=-py*.035;
   traffic.forEach((t,i)=>{t.g.position.x=t.baseX+Math.sin(now/1400+t.phase)*8;t.g.position.y=t.baseY+Math.sin(now/900+t.phase)*.7;t.g.position.z=t.baseZ+((now/45)%80);if(t.g.position.z>15)t.g.position.z=-110});
