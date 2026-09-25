@@ -162,6 +162,38 @@ function flightSimReal(){
   const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);
   loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([1.5,.6,1.5],0x777777));});
  });
+
+ // Large connected city district: a dense grid of real GLB buildings around procedural roads.
+ const cityBuildings=[
+  "https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_05_Art.glb",
+  "https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_06_Art.glb",
+  "https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_07_Art.glb",
+  "https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_08_Art.glb",
+  "https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_09_Art.glb"
+ ];
+ const cityRoads=new THREE.Group();cityRoads.position.y=.03;world.add(cityRoads);
+ for(let r=0;r<7;r++){
+  const z=-78-r*18;
+  const road=cube([118,.06,3.8],0x4b4b4b);road.position.set(0,-1.94,z);cityRoads.add(road);
+  for(let x=-52;x<=52;x+=8){const mark=cube([4,.025,.12],0xe4e1bd);mark.position.set(x,-1.90,z);cityRoads.add(mark);}
+ }
+ for(let c=0;c<8;c++){
+  const x=-56+c*16;
+  const road=cube([3.8,.06,126],0x4b4b4b);road.position.set(x,-1.94,-132);cityRoads.add(road);
+  for(let z=-72;z>=-192;z-=8){const mark=cube([.12,.025,4],0xe4e1bd);mark.position.set(x,-1.90,z);cityRoads.add(mark);}
+ }
+ for(let row=0;row<5;row++)for(let col=0;col<7;col++){
+  const x=-48+col*16, z=-86-row*20;
+  const h=new THREE.Group();h.position.set(x,-2.0,z);h.scale.setScalar(2.0+(row%2)*.25);world.add(h);
+  loadRealGLB(cityBuildings[(row*7+col)%cityBuildings.length],h,ok=>{if(!ok)h.add(cube([4,6,4],0x8a8a8a));});
+ }
+ // City park blocks and a central boulevard.
+ for(let p=0;p<8;p++){
+  const park=new THREE.Mesh(new THREE.BoxGeometry(10,.12,10),mat(0x4b9148));
+  park.position.set(-40+(p%4)*32,-1.86,-98-Math.floor(p/4)*72);world.add(park);
+  for(let t=0;t<4;t++)addTree(park.position.x-3+(t%2)*6,park.position.z-3+Math.floor(t/2)*6,.85);
+ }
+ const boulevard=cube([8,.07,126],0x3f3f3f);boulevard.position.set(0,-1.88,-132);world.add(boulevard);
  sceneryUrls.forEach(a=>{
   const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);
   loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([2,.8,2],0x777777));});
