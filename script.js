@@ -142,7 +142,7 @@ function addRealAirliners(world){
  ];
  models.forEach((m,i)=>{
   const g=new THREE.Group();g.position.set(-12+i*12,1.8,-35-i*25);g.rotation.y=Math.PI;g.scale.setScalar(1);world.add(g);
-  loadRealGLB(m[1],g,ok=>{if(ok){const label=addText(world,m[0],g.position.x,g.position.y+2,g.position.z,.5);label.material.opacity=.75}});
+  loadRealGLB(m[1],g,ok=>{const label=addText(world,ok?("✓ "+m[0]):("✗ "+m[0]),g.position.x,g.position.y+2,g.position.z,.5);label.material.opacity=.9;label.material.color.set(ok?0x55ff88:0xff5555);});
  });
 }
 
