@@ -146,8 +146,8 @@ function loadRealGLB(url,group,done){
 function addRealAirliners(world){
  const models=[
   ["A320","assets/A320_nologo.glb"],
-  ["A350","https://cdn.jsdelivr.net/gh/amvlab/aircraft-models@91d835e8e851b2317fe79af291c9fed6153fd525/models/A350_nologo.glb"],
-  ["B737","https://cdn.jsdelivr.net/gh/amvlab/aircraft-models@91d835e8e851b2317fe79af291c9fed6153fd525/models/B737_nologo.glb"]
+  ["A350","assets/A350_nologo.glb"],
+  ["B737","assets/B737_nologo.glb"]
  ];
  models.forEach((m,i)=>{
   const g=new THREE.Group();g.position.set(-12+i*12,1.8,-35-i*25);g.rotation.y=Math.PI;g.scale.setScalar(1);world.add(g);
