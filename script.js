@@ -132,6 +132,36 @@ function flightSimReal(){
   ["Container","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Container_01_Art.glb",-28,-2,-38,1.5],
   ["Crate","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Crate_01_Art.glb",28,-2,-42,1.5]
  ];
+
+ // Extra CC0 Kenney GLB scenery served from the public Bevy asset mirror.
+ // These are real GLB files: commercial/suburban buildings, roads, trees and vehicles.
+ const KENNEY="https://github.com/bevyengine/bevy_asset_files/raw/main/kenney";
+ const kenneyGlbs=[
+  ["City tower A",KENNEY+"/city-kit-commercial/building-skyscraper-a.glb",-48,-2,-92,2.4],
+  ["City tower B",KENNEY+"/city-kit-commercial/building-skyscraper-b.glb",-36,-2,-108,2.2],
+  ["City tower C",KENNEY+"/city-kit-commercial/building-skyscraper-c.glb",-24,-2,-122,2.5],
+  ["City building D",KENNEY+"/city-kit-commercial/building-d.glb",30,-2,-100,2.0],
+  ["City building E",KENNEY+"/city-kit-commercial/building-e.glb",44,-2,-116,2.2],
+  ["Suburban house B",KENNEY+"/city-kit-suburban/building-type-b.glb",52,-2,-160,1.8],
+  ["Suburban house C",KENNEY+"/city-kit-suburban/building-type-c.glb",62,-2,-174,1.8],
+  ["Suburban house D",KENNEY+"/city-kit-suburban/building-type-d.glb",-52,-2,-165,1.8],
+  ["Suburban house E",KENNEY+"/city-kit-suburban/building-type-e.glb",-64,-2,-178,1.8],
+  ["Road straight 1",KENNEY+"/city-kit-roads/road-straight.glb",-28,-2,-150,1.0],
+  ["Road straight 2",KENNEY+"/city-kit-roads/road-straight.glb",28,-2,-172,1.0],
+  ["Road crossroad",KENNEY+"/city-kit-roads/road-crossroad-path.glb",0,-2,-195,1.0],
+  ["Tree small 1",KENNEY+"/city-kit-suburban/tree-small.glb",-58,-2,-145,2.0],
+  ["Tree large 1",KENNEY+"/city-kit-suburban/tree-large.glb",-72,-2,-158,2.0],
+  ["Tree small 2",KENNEY+"/city-kit-suburban/tree-small.glb",58,-2,-188,2.0],
+  ["Tree large 2",KENNEY+"/city-kit-suburban/tree-large.glb",72,-2,-202,2.0],
+  ["Car SUV",KENNEY+"/car-kit/suv.glb",-18,-1.5,-145,1.2],
+  ["Car sedan",KENNEY+"/car-kit/sedan.glb",18,-1.5,-155,1.2],
+  ["Car taxi",KENNEY+"/car-kit/taxi.glb",-18,-1.5,-180,1.2],
+  ["Car truck",KENNEY+"/car-kit/truck.glb",18,-1.5,-190,1.2]
+ ];
+ kenneyGlbs.forEach(a=>{
+  const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);
+  loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([1.5,.6,1.5],0x777777));});
+ });
  sceneryUrls.forEach(a=>{
   const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);
   loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([2,.8,2],0x777777));});
