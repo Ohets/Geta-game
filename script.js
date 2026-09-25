@@ -136,7 +136,7 @@ function flightSimReal(){
   const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);
   loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([2,.8,2],0x777777));});
  });
- function loop(now){if(!alive)return;const dt=Math.min((now-last)/16,2);last=now;world.position.z+=.045*dt;plane.position.x=px;plane.position.y=py;plane.rotation.z=-px*.07;plane.rotation.x=-py*.035;heading=(heading+px*.08*dt+360)%360;alt+=(500+py*500-alt)*.01*dt;hud.innerHTML="ALT "+Math.round(alt)+" m<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°";g.camera.position.set(0,2.6,8);g.camera.lookAt(0,.2,0);g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
+ function loop(now){if(!alive)return;const dt=Math.min((now-last)/16,2);last=now;world.position.z+=.045*dt;plane.position.x=px;plane.position.y=py;plane.rotation.z=-px*.07;plane.rotation.x=-py*.035;heading=(heading+px*.08*dt+360)%360;alt+=(500+py*500-alt)*.01*dt;hud.innerHTML="ALT "+Math.round(alt)+" m<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°";g.camera.position.lerp(new THREE.Vector3(plane.position.x*.65,plane.position.y+2.6,plane.position.z+9),.12);g.camera.lookAt(plane.position.x,plane.position.y+.15,plane.position.z-2);g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
  loadAircraft();loop(performance.now());
 }
 ;window.flightSim=flightSimReal;
