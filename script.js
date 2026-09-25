@@ -228,6 +228,45 @@ function flightSimReal(){
   ["CC0 tiny town building",CC0K+"buildings/kenney-tiny-town/building_1.glb",82,-2,-168,1.5]
  ];
  cc0Kenney.forEach(a=>{const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([1.5,.6,1.5],0x777777));});});
+
+ // Lazy CC0 GLB library from GitHub. The complete verified Kenney suburban GLB folder
+ // is discovered automatically; models are downloaded only when the aircraft gets close.
+ const CC0_GITHUB_API="https://api.github.com/repos/petroulacl/fps-buildings-env-kit/contents/buildings/kenney-city-kit-suburban/Models/GLB%20format?ref=main";
+ const CC0_GITHUB_RAW="https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/main/buildings/kenney-city-kit-suburban/Models/GLB%20format/";
+ const lazyCC0Objects=[];
+ let lazyCC0Ready=false;
+ async function discoverCC0GLBs(){
+  try{
+   const res=await fetch(CC0_GITHUB_API,{headers:{Accept:"application/vnd.github+json"}});
+   if(!res.ok)throw new Error("GitHub API "+res.status);
+   const list=await res.json();
+   const glbs=list.filter(x=>x.type==="file"&&/\\.glb$/i.test(x.name));
+   glbs.forEach((x,i)=>{
+    const angle=(i%12)/12*Math.PI*2;
+    const ring=34+Math.floor(i/12)*12;
+    const z=-72-Math.floor(i/12)*18;
+    const slot={name:x.name,url:CC0_GITHUB_RAW+encodeURIComponent(x.name),position:new THREE.Vector3(Math.cos(angle)*ring,-2, z+Math.sin(angle)*ring*.45),loaded:false,loading:false,group:null};
+    lazyCC0Objects.push(slot);
+   });
+   lazyCC0Ready=true;
+   console.info("CC0 GLB-Katalog:",lazyCC0Objects.length,"Modelle gefunden");
+  }catch(e){console.warn("CC0 GitHub-Katalog konnte nicht geladen werden",e)}
+ }
+ function updateLazyCC0Objects(aircraft,world){
+  if(!lazyCC0Ready)return;
+  const ap=aircraft.getWorldPosition(new THREE.Vector3());
+  lazyCC0Objects.forEach(slot=>{
+   const wp=slot.position.clone();wp.z+=world.position.z;
+   const d=wp.distanceTo(ap);
+   if(!slot.loaded&&!slot.loading&&d<105){
+    slot.loading=true;
+    const g=new THREE.Group();g.position.copy(slot.position);world.add(g);slot.group=g;
+    loadRealGLB(slot.url,g,ok=>{slot.loaded=ok;slot.loading=false;if(!ok&&slot.group){world.remove(slot.group);slot.group=null;}});
+   }
+   if(slot.group)slot.group.visible=d<GLB_MAX_RENDER_DISTANCE;
+  });
+ }
+ discoverCC0GLBs();
  // Tropical island-style flight scenery: water, islands, hills, roads, villages, bridges and vegetation.
  const water=new THREE.Mesh(new THREE.PlaneGeometry(700,700),mat(0x197aa3));
  water.rotation.x=-Math.PI/2;water.position.set(0,-2.35,-150);world.add(water);
