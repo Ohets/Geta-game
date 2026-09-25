@@ -285,7 +285,7 @@ function loadRealGLB(url,group,done){
   // Local aircraft are stored in this repository. Use raw.githubusercontent.com
   // explicitly so they also work reliably on GitHub Pages.
   let fullUrl=url;
-  if(/^assets\\//.test(url)){
+  if(url.startsWith("assets/")){
    fullUrl=new URL(url,window.location.href).href;
   }else{
    fullUrl=new URL(url,window.location.href).href;
