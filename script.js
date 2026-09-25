@@ -95,16 +95,15 @@ function flightSimReal(){
  const runway=cube([8,.06,85],0x4a4a4a);runway.position.set(0,-2.18,-12);world.add(runway);
  for(let z=30;z>-75;z-=6){const q=cube([.3,.04,2.7],0xffffff);q.position.set(0,-2.1,z);world.add(q)}
  const shoulderL=cube([.15,.04,85],0xffd84d),shoulderR=shoulderL.clone();shoulderL.position.set(-4,-2.1,-12);shoulderR.position.set(4,-2.1,-12);world.add(shoulderL,shoulderR);
- for(let x=-45;x<=45;x+=7)for(let z=20;z>-180;z-=12){if(Math.abs(x)<6)continue;const t=cube([.25,.9,.25],0x70452b),cc=sphere(.75,0x237a3a),tree=new THREE.Group();t.position.y=-1.65;cc.position.y=-.8;tree.add(t,cc);tree.position.set(x+(Math.random()-.5)*2,0,z+(Math.random()-.5)*4);tree.scale.setScalar(.8+Math.random()*.6);world.add(tree)}
- for(let x=-35;x<=35;x+=14){const hill=sphere(6,0x507c4b);hill.scale.y=.5;hill.position.set(x,-.2,-90-Math.random()*45);world.add(hill)}
- const clouds=new THREE.Group();for(let i=0;i<24;i++){const cl=new THREE.Group();for(let j=0;j<5;j++){const p=sphere(.7,0xffffff);p.position.set((Math.random()-.5)*1.8,Math.random()*.8,(Math.random()-.5)*1.5);cl.add(p)}cl.position.set((Math.random()-.5)*45,5+Math.random()*7,-20-Math.random()*130);cl.scale.setScalar(1+Math.random()*1.3);clouds.add(cl)}world.add(clouds);
- // Simple airport terminal, tower and hangars
- const terminal=cube([15,2.8,5],0xb8c0c8);terminal.position.set(14,-.8,-18);world.add(terminal);
- const roof=cube([16,.35,5.5],0x34495e);roof.position.set(14,.7,-18);world.add(roof);
- for(let x=8;x<=20;x+=3){const win=cube([1.5,1,.08],0x75c9e8);win.position.set(x,.0,-15.42);world.add(win)}
- const tower=cube([1.5,7,1.5],0xd8d8d8);tower.position.set(25,1.2,-20);world.add(tower);
- const cab=cube([2.5,1,2.5],0x34495e);cab.position.set(25,4.8,-20);world.add(cab);
- for(let x=-18;x<=-10;x+=4){const hang=cube([3.5,2.8,5],0x9aa3ad);hang.position.set(x,-.8,-18);world.add(hang)}
+ const scenery=new THREE.Group();scenery.position.set(0,-2.2,-22);world.add(scenery);
+ loadRealGLB("https://cdn.3dassets.dev/assets/26095/v1/model.glb",scenery,ok=>{if(ok){scenery.scale.setScalar(.32);msg&&msg; }});
+ const concourse=new THREE.Group();concourse.position.set(15,-2.2,-16);world.add(concourse);
+ loadRealGLB("https://cdn.3dassets.dev/assets/26093/v1/model.glb",concourse,ok=>{if(ok){concourse.scale.setScalar(.35);}});
+ const treeProto=new THREE.Group();
+ loadRealGLB("https://cdn.3dassets.dev/assets/27427/v1/model.glb",treeProto,ok=>{
+   if(!ok)return;
+   for(let i=0;i<28;i++){const t=treeProto.clone(true);t.position.set((Math.random()-.5)*75,-2.2,-20-Math.random()*150);t.scale.setScalar(.55+Math.random()*.5);world.add(t);}
+ });
  addRealAirliners(world);
  const traffic=[];
  [["A350",-15,2.8,-55,"assets/A350_nologo.glb"],["B737",16,3.8,-82,"assets/B737_nologo.glb"]].forEach((v,i)=>{
