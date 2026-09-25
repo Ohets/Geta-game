@@ -77,3 +77,38 @@ function flightSim(){
  g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
  loop(performance.now());
 }
+
+// Real internet 3D aircraft
+let realObjLoaderPromise=null;
+function ensureOBJLoader(done){
+ if(THREE&&THREE.OBJLoader)return done(true);
+ if(realObjLoaderPromise)return realObjLoaderPromise.then(()=>done(true)).catch(()=>done(false));
+ realObjLoaderPromise=new Promise((resolve,reject)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/loaders/OBJLoader.js";s.onload=()=>THREE&&THREE.OBJLoader?resolve():reject();s.onerror=reject;document.head.appendChild(s)});
+ realObjLoaderPromise.then(()=>done(true)).catch(()=>done(false));
+}
+function flightSimReal(){
+ if(!THREE)return ensureThree(()=>flightSimReal()); stop3D();
+ const b=document.getElementById("flightSimBox"),g=make3D(b,{bg:0x72b8e8,fog:0x72b8e8});g.camera.position.set(0,2.2,8);
+ const world=new THREE.Group();g.scene.add(world);
+ const ground=new THREE.Mesh(new THREE.PlaneGeometry(100,220),mat(0x3f8f45));ground.rotation.x=-Math.PI/2;ground.position.set(0,-2.25,-70);world.add(ground);
+ const runway=cube([7,.06,65],0x4a4a4a);runway.position.set(0,-2.18,-8);world.add(runway);
+ for(let z=20;z>-55;z-=6){const q=cube([.25,.04,2.5],0xffffff);q.position.set(0,-2.1,z);world.add(q)}
+ for(let x=-35;x<=35;x+=7)for(let z=15;z>-120;z-=12){const t=cube([.25,.9,.25],0x70452b),c=sphere(.75,0x237a3a),tree=new THREE.Group();t.position.y=-1.65;c.position.y=-.8;tree.add(t,c);tree.position.set(x+(Math.random()-.5)*2,0,z+(Math.random()-.5)*4);tree.scale.setScalar(.8+Math.random()*.5);world.add(tree)}
+ const plane=new THREE.Group();plane.position.set(0,.2,5);g.scene.add(plane);const fallback=cube([1.05,.34,2.4],0xf4f4f4);plane.add(fallback);
+ const hud=document.createElement("div");hud.className="flightHud";b.appendChild(hud);
+ const controls=document.createElement("div");controls.className="flightSimControls";controls.innerHTML='<button data-fs="left">◀</button><button data-fs="up">▲</button><button data-fs="down">▼</button><button data-fs="right">▶</button>';b.appendChild(controls);
+ const throttle=document.createElement("input");throttle.type="range";throttle.min="0";throttle.max="100";throttle.value="55";throttle.className="flightThrottle";b.appendChild(throttle);
+ const msg=document.createElement("div");msg.className="flightMessage";msg.textContent="🛫 Echtes 3D-Flugzeug wird geladen …";b.appendChild(msg);
+ const credit=document.createElement("div");credit.className="flightCredit";credit.textContent="3D aircraft: Poly by Google via Poly Pizza (CC BY)";b.appendChild(credit);
+ let px=0,py=.2,heading=0,alt=500,distance=0,alive=true,last=performance.now(),takeoff=false,landing=false;
+ function steer(dx,dy){px=Math.max(-4.5,Math.min(4.5,px+dx));py=Math.max(-1.8,Math.min(3.2,py+dy))}
+ controls.querySelector("[data-fs=left]").onpointerdown=()=>steer(-.45,0);controls.querySelector("[data-fs=right]").onpointerdown=()=>steer(.45,0);controls.querySelector("[data-fs=up]").onpointerdown=()=>steer(0,.28);controls.querySelector("[data-fs=down]").onpointerdown=()=>steer(0,-.28);
+ document.onkeydown=e=>{if(e.key==="ArrowLeft")steer(-.35,0);if(e.key==="ArrowRight")steer(.35,0);if(e.key==="ArrowUp")steer(0,.22);if(e.key==="ArrowDown")steer(0,-.22);if(e.key==="w"||e.key==="W")throttle.value=Math.min(100,+throttle.value+5);if(e.key==="s"||e.key==="S")throttle.value=Math.max(0,+throttle.value-5)};
+ function end(t){alive=false;stop3D();b.innerHTML="<strong>"+t+"</strong><br><button onclick=\"flightSim()\">Nochmal</button>"}
+ ensureOBJLoader(ok=>{if(ok)new THREE.OBJLoader().load("https://assets.codepen.io/127738/Airplane_model2.obj",obj=>{plane.remove(fallback);obj.scale.setScalar(.013);obj.rotation.y=Math.PI;obj.position.y=-1.3;obj.traverse(o=>{if(o.isMesh){o.material=mat(0xe8edf2,.35,.15);o.castShadow=true}});plane.add(obj);msg.textContent="🛫 Echtes 3D-Flugzeug geladen!"},undefined,()=>msg.textContent="🛫 Modell nicht erreichbar – Ersatzmodell aktiv.");else msg.textContent="🛫 Modell-Loader nicht erreichbar – Ersatzmodell aktiv."});
+ function loop(now){if(!alive)return;const dt=Math.min((now-last)/16,2);last=now;const power=+throttle.value,speed=.025+power*.00075;world.position.z+=speed*dt;distance+=speed*dt*.2;const targetAlt=takeoff?1800:Math.max(500,1800+py*650);alt+=(targetAlt-alt)*.015*dt;heading=(heading+px*.12*dt+360)%360;plane.position.x=px;plane.position.y=py;plane.rotation.z=-px*.07;plane.rotation.x=-py*.035;
+ if(!takeoff&&distance>1.2){takeoff=true;msg.textContent="🛫 Abgehoben!"}if(takeoff&&distance>16){landing=true;msg.textContent="🛬 Landeanflug: zurück zur Landebahn!"}if(landing&&distance>25){if(Math.abs(px)<1.1&&py>-1.7&&py<-.8&&power<35)end("🛬 Perfekte Landung!");else end("💥 Landung verpasst")}if(py<-1.75||py>3.15)return end("⚠️ Flugzeug außer Kontrolle");
+ hud.innerHTML="ALT "+Math.round(alt)+" m<br>SPEED "+Math.round(140+power*2.2)+" km/h<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°<br>THR "+power+"%";g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
+ loop(performance.now());
+}
+window.flightSim=flightSimReal;
