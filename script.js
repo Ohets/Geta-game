@@ -136,6 +136,45 @@ function flightSimReal(){
   const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);
   loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([2,.8,2],0x777777));});
  });
+ // Tropical island-style flight scenery: water, islands, hills, roads, villages, bridges and vegetation.
+ const water=new THREE.Mesh(new THREE.PlaneGeometry(700,700),mat(0x197aa3));
+ water.rotation.x=-Math.PI/2;water.position.set(0,-2.35,-150);world.add(water);
+ function addIsland(x,z,w,d){
+  const island=new THREE.Mesh(new THREE.CylinderGeometry(w*.42,w,w*.12,32),mat(0x4f9b45));
+  island.scale.z=d/w; island.position.set(x,-2.05,z); world.add(island);
+  for(let i=0;i<5;i++){
+   const hill=new THREE.Mesh(new THREE.ConeGeometry(w*.12,w*.32,16),mat(0x568b3c));
+   hill.position.set(x+(i-2)*w*.12,-1.75,z+(i%2)*d*.12-d*.05); world.add(hill);
+  }
+ }
+ addIsland(-65,-55,55,85); addIsland(72,-95,58,90); addIsland(-75,-185,70,105); addIsland(85,-245,65,110);
+ function addTree(x,z,scale=1){
+  const t=new THREE.Group();
+  const trunk=cube([.28,1.5,.28],0x76502e);trunk.position.y=-1.25;t.add(trunk);
+  const crown=sphere(.95,0x2f7f3b);crown.position.y=.0;t.add(crown);
+  t.position.set(x,-.25,z);t.scale.setScalar(scale);world.add(t);
+ }
+ for(let i=0;i<46;i++){
+  const side=i%2?1:-1, x=side*(13+(i*17)%55), z=20-(i*13);
+  addTree(x,z,0.7+((i%4)*.12));
+ }
+ function addRoad(x,z,w,d,rot=0){
+  const r=cube([w,.05,d],0x575757);r.position.set(x,-1.92,z);r.rotation.y=rot;world.add(r);
+  const line=cube([.12,.02,d*.75],0xd9d9b0);line.position.set(x,-1.87,z);line.rotation.y=rot;world.add(line);
+ }
+ addRoad(-31,-85,4,95,.03); addRoad(34,-125,4,120,-.02);
+ addRoad(-1,-178,5,130,Math.PI/2);
+ // Small island village houses.
+ function addHouse(x,z,sc=1){
+  const h=new THREE.Group();
+  const body=cube([3*sc,2*sc,3*sc],0xd9d0b2);body.position.y=-.85;h.add(body);
+  const roof=new THREE.Mesh(new THREE.ConeGeometry(2.4*sc,1.5*sc,4),mat(0x8d3f2e));roof.position.y=.9*sc;roof.rotation.y=Math.PI/4;h.add(roof);
+  h.position.set(x,-.25,z);world.add(h);
+ }
+ addHouse(-48,-105,1);addHouse(-57,-118,.8);addHouse(48,-142,1);addHouse(58,-153,.75);
+ // Bridge across a narrow water channel.
+ const bridge=cube([8,.35,48],0x6f6f6f);bridge.position.set(0,-1.72,-215);world.add(bridge);
+ for(let x=-3.2;x<=3.2;x+=1.6){const rail=cube([.12,1,48],0x777777);rail.position.set(x,-.9,-215);world.add(rail)}
  function loop(now){if(!alive)return;const dt=Math.min((now-last)/16,2);last=now;world.position.z+=.045*dt;plane.position.x=px;plane.position.y=py;plane.rotation.z=-px*.07;plane.rotation.x=-py*.035;heading=(heading+px*.08*dt+360)%360;alt+=(500+py*500-alt)*.01*dt;hud.innerHTML="ALT "+Math.round(alt)+" m<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°";g.camera.position.lerp(new THREE.Vector3(plane.position.x*.65,plane.position.y+2.6,plane.position.z+9),.12);g.camera.lookAt(plane.position.x,plane.position.y+.15,plane.position.z-2);g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
  loadAircraft();loop(performance.now());
 }
