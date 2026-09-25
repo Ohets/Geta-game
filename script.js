@@ -90,165 +90,26 @@ function flightSimReal(){
  if(!THREE)return ensureThree(()=>flightSimReal());
  stop3D();
  const b=document.getElementById("flightSimBox"),g=make3D(b,{bg:0x72b8e8,fog:0x72b8e8});
- g.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
  const world=new THREE.Group();g.scene.add(world);
-
- // AIRPORT / TERRAIN
- const ground=new THREE.Mesh(new THREE.PlaneGeometry(220,360),mat(0x3f8f45));
- ground.rotation.x=-Math.PI/2;ground.position.set(0,-2.25,-135);ground.receiveShadow=true;world.add(ground);
+ const ground=new THREE.Mesh(new THREE.PlaneGeometry(220,360),mat(0x3f8f45));ground.rotation.x=-Math.PI/2;ground.position.set(0,-2.25,-135);world.add(ground);
  const runway=cube([9,.08,100],0x444444);runway.position.set(0,-2.18,-18);world.add(runway);
- const taxi=cube([4,.06,90],0x505050);taxi.position.set(11,-2.19,-18);world.add(taxi);
  for(let z=35;z>-85;z-=6){const q=cube([.32,.04,2.8],0xffffff);q.position.set(0,-2.1,z);world.add(q)}
- for(let z=32;z>-85;z-=4){[-4.25,4.25].forEach(x=>{const l=cube([.10,.10,.28],0xffffcc);l.position.set(x,-2.05,z);l.userData.light=true;world.add(l)})}
- for(let z=30;z>-80;z-=8){const l=cube([.18,.06,.45],0xffdd66);l.position.set(11,-2.04,z);world.add(l)}
- for(let x=-4;x<=4;x+=1.3){const mark=cube([.18,.05,4],0xffffff);mark.position.set(x,-2.08,-2);world.add(mark)}
- // REAL GLB AIRPORT SCENERY (CC0 assets)
- const realAirportAssets=[
-  ["terminal","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Platform_01_Art.glb",18,0,-15,1.5],
-  ["hangar","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Iron_Structure_01_Art.glb",-18,0,-28,1.2],
-  ["tower","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/TowerStation_Ground_Art.glb",27,-1,-25,1.1],
-  ["tower top","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Tower_Station_01_Art.glb",27,1,-25,.55]
- ];
- realAirportAssets.forEach(a=>{
-  const g=new THREE.Group();g.position.set(a[2],a[3],a[4]);g.scale.setScalar(a[5]);world.add(g);
-  loadRealGLB(a[1],g,ok=>{if(!ok)console.warn("Airport-GLB nicht geladen:",a[0]);});
- });
- // GLB vegetation and scenery props
- const plantUrl="https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Plant_02_Art.glb";
- const rockUrl="https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Rock_01.glb";
- for(let i=0;i<24;i++){
-  const g=new THREE.Group();g.position.set((Math.random()-.5)*130,0,-35-Math.random()*180);g.scale.setScalar(.7+Math.random()*.8);world.add(g);
-  loadRealGLB(i%4===0?rockUrl:plantUrl,g,()=>{});
- }
- // GLB cloud objects
- const cloudUrl="https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Plant_01_Art.glb";
- for(let i=0;i<8;i++){
-  const g=new THREE.Group();g.position.set((Math.random()-.5)*55,7+Math.random()*7,-25-Math.random()*150);g.scale.setScalar(1.2+Math.random()*1.4);world.add(g);
-  loadRealGLB(cloudUrl,g,()=>{});
- }
- // PLAYER AIRCRAFT
  const plane=new THREE.Group();plane.position.set(0,.2,5);g.scene.add(plane);
- const hud=document.createElement("div");hud.className="flightHud";b.appendChild(hud);
+ const msg=document.createElement("div");msg.className="flightMessage";msg.textContent="🛫 3D-Simulator wird geladen …";b.appendChild(msg);
+ const select=document.createElement("select");select.innerHTML='<option value="A320">✈️ A320</option><option value="A350">✈️ A350</option><option value="B737">✈️ B737</option>';select.style.cssText="position:absolute;right:10px;top:42px;z-index:12;padding:4px";b.appendChild(select);
  const controls=document.createElement("div");controls.className="flightSimControls";controls.innerHTML='<button data-fs="left">◀</button><button data-fs="up">▲</button><button data-fs="down">▼</button><button data-fs="right">▶</button>';b.appendChild(controls);
- const throttle=document.createElement("input");throttle.type="range";throttle.min="0";throttle.max="100";throttle.value="55";throttle.className="flightThrottle";b.appendChild(throttle);
- const msg=document.createElement("div");msg.className="flightMessage";msg.textContent="🛫 A320 wird geladen …";b.appendChild(msg);
- const select=document.createElement("select");select.innerHTML='<option value="A320">✈️ A320</option><option value="A350">✈️ A350</option><option value="B737">✈️ B737</option><option value="A380">✈️ A380</option><option value="B787">✈️ B787</option><option value="EVTOL">🚁 EVTOL</option><option value="drone">🚁 Drone</option>';select.style.cssText="position:absolute;right:10px;top:42px;z-index:12;padding:4px;border-radius:6px";b.appendChild(select);
-
- // WEATHER / FLIGHT SYSTEMS
- const fuelBox=document.createElement("div");fuelBox.style.cssText="position:absolute;right:10px;top:72px;z-index:11;font:700 11px monospace;background:#0008;padding:4px 6px;border-radius:5px";b.appendChild(fuelBox);
- const scoreBox=document.createElement("div");scoreBox.style.cssText="position:absolute;left:10px;bottom:62px;z-index:11;font:700 11px monospace;background:#0008;padding:4px 6px;border-radius:5px";b.appendChild(scoreBox);
- const weather=document.createElement("select");weather.innerHTML='<option value="clear">☀️ Klar</option><option value="rain">🌧️ Regen</option><option value="night">🌙 Nacht</option>';weather.style.cssText="position:absolute;right:10px;top:104px;z-index:12;padding:4px;border-radius:6px";b.appendChild(weather);
- const systems=document.createElement("div");systems.style.cssText="position:absolute;right:10px;bottom:62px;z-index:12;display:flex;gap:4px";systems.innerHTML='<button id="gearBtn">⚙️ Fahrwerk</button><button id="flapBtn">🪽 Klappen</button><button id="brakeBtn">🛑 Bremse</button>';b.appendChild(systems);
- const mission=document.createElement("div");mission.style.cssText="position:absolute;left:10px;top:78px;z-index:11;font:700 10px monospace;background:#0008;padding:4px 6px;border-radius:5px;max-width:220px";b.appendChild(mission);
-
- // CAMERA VIEWS + GLB COCKPIT/CABIN
- const viewBox=document.createElement("div");viewBox.style.cssText="position:absolute;left:10px;top:110px;z-index:12;display:flex;gap:3px;flex-wrap:wrap";viewBox.innerHTML='<button data-view="cockpit">🧑‍✈️ Cockpit</button><button data-view="chase">✈️ Außen</button><button data-view="wing">🪽 Flügel</button><button data-view="cabin">🪑 Kabine</button>';b.appendChild(viewBox);
- let viewMode="chase";
- const cockpit=new THREE.Group();cockpit.visible=false;g.scene.add(cockpit);
- const cabin=new THREE.Group();cabin.visible=false;g.scene.add(cabin);
- const cockpitUrl="https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Tower_Station_CallerButton_Art.glb";
- const cabinSeatUrl="https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Bench_01.glb";
- loadRealGLB(cockpitUrl,cockpit,()=>{});
- for(let z=-4;z<=4;z+=2){
-  for(let x=-1.5;x<=1.5;x+=1.5){
-   const seat=new THREE.Group();seat.position.set(x,-.8,z);seat.scale.setScalar(.7);cabin.add(seat);loadRealGLB(cabinSeatUrl,seat,()=>{});
-  }
- }
- function setView(v){viewMode=v;cockpit.visible=v==="cockpit";cabin.visible=v==="cabin";}
- viewBox.querySelectorAll("button").forEach(btn=>btn.onpointerdown=()=>setView(btn.dataset.view));
-const resetView=document.createElement("button");
-resetView.textContent="🎥 Reset";
-resetView.onpointerdown=()=>setView("chase");
-viewBox.appendChild(resetView);
-
- // INSTRUMENTS
- const inst=document.createElement("div");inst.style.cssText="position:absolute;right:10px;bottom:108px;z-index:12;font:700 10px monospace;background:#0009;padding:5px;border-radius:6px;min-width:125px";b.appendChild(inst);
- const credit=document.createElement("div");credit.className="flightCredit";credit.textContent="Aircraft models: amvlab/aircraft-models — CC BY 4.0";b.appendChild(credit);
-
- // TRAFFIC
- const traffic=[];
- [["A350",-16,3,-55,"assets/A350_nologo.glb"],["B737",16,4,-80,"assets/B737_nologo.glb"],["A320",28,6,-125,"assets/A320_nologo.glb"]].forEach((v,i)=>{
-  const tg=new THREE.Group();tg.position.set(v[1],v[2],v[3]);world.add(tg);traffic.push({g:tg,phase:i*2,baseX:v[1],baseY:v[2],baseZ:v[3]});
-  loadRealGLB(v[4],tg,ok=>{tg.scale.setScalar(.65);tg.rotation.y=Math.PI});
- });
- addRealAirliners(world);\n addExtraAirportScenery(world);
-
- // RAIN PARTICLES
- const rainGeo=new THREE.BufferGeometry(),rainCount=260, rainPos=new Float32Array(rainCount*3);
- for(let i=0;i<rainCount;i++){rainPos[i*3]=(Math.random()-.5)*100;rainPos[i*3+1]=Math.random()*25;rainPos[i*3+2]=-Math.random()*160}
- rainGeo.setAttribute("position",new THREE.BufferAttribute(rainPos,3));
- const rain=new THREE.Points(rainGeo,new THREE.PointsMaterial({color:0xaaccff,size:.08,transparent:true,opacity:.75}));rain.visible=false;world.add(rain);
-
- // LIGHTS
- const airportLights=[];
- for(let i=0;i<26;i++){const pl=new THREE.PointLight(0xffd36b,1.2,9);pl.position.set((i%2?4.5:-4.5),-.8,-5-i*5);world.add(pl);airportLights.push(pl)}
- const beacon=new THREE.PointLight(0xff5555,1.5,18);beacon.position.set(0,4,-30);world.add(beacon);
-
- let selected="A320",px=0,py=.2,heading=0,alt=500,distance=0,fuel=100,score=0,alive=true,last=performance.now();
- let takeoff=false,landing=false,gear=true,flaps=false,brake=false,weatherMode="clear",missionIndex=0,missionDone=false;
- const missions=["Starten und sicher auf 1500 m steigen","Reiseflug: Kurs halten und Verkehr meiden","Landeanflug vorbereiten: Klappen + Fahrwerk","Sicher auf der Bahn aufsetzen"];
- function steer(dx,dy){px=Math.max(-4.5,Math.min(4.5,px+dx));py=Math.max(-1.8,Math.min(3.2,py+dy))}
- controls.querySelector("[data-fs=left]").onpointerdown=()=>steer(-.45,0);controls.querySelector("[data-fs=right]").onpointerdown=()=>steer(.45,0);controls.querySelector("[data-fs=up]").onpointerdown=()=>steer(0,.28);controls.querySelector("[data-fs=down]").onpointerdown=()=>steer(0,-.28);
- document.onkeydown=e=>{if(e.key==="ArrowLeft")steer(-.35,0);if(e.key==="ArrowRight")steer(.35,0);if(e.key==="ArrowUp")steer(0,.22);if(e.key==="ArrowDown")steer(0,-.22);if(e.key==="w"||e.key==="W")throttle.value=Math.min(100,+throttle.value+5);if(e.key==="s"||e.key==="S")throttle.value=Math.max(0,+throttle.value-5)};
- weather.onchange=()=>{weatherMode=weather.value;const night=weatherMode==="night";g.scene.background.set(night?0x081225:weatherMode==="rain"?0x667788:0x72b8e8);g.scene.fog.color.set(night?0x081225:weatherMode==="rain"?0x667788:0x72b8e8);rain.visible=weatherMode==="rain";airportLights.forEach(l=>l.intensity=night?2.2:weatherMode==="rain"?1.4:.5);beacon.intensity=night?2.5:1.0;};
- document.getElementById("gearBtn").onpointerdown=()=>{gear=!gear;document.getElementById("gearBtn").textContent=gear?"⚙️ Fahrwerk":"⚙️ UP"};
- document.getElementById("flapBtn").onpointerdown=()=>{flaps=!flaps;document.getElementById("flapBtn").textContent=flaps?"🪽 OUT":"🪽 Klappen"};
- document.getElementById("brakeBtn").onpointerdown=()=>{brake=true;setTimeout(()=>brake=false,1500)};
- const aircraftUrls={
-  A320:"assets/A320_nologo.glb",
-  A350:"assets/A350_nologo.glb",
-  B737:"assets/B737_nologo.glb",
-  A380:"https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/A380_nologo.glb",
-  B787:"https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/B787_nologo.glb",
-  EVTOL:"https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/EVTOL_nologo.glb",
-  drone:"https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/drone_nologo.glb"
-};
-function loadSelectedAircraft(){
-  const url=aircraftUrls[selected]||aircraftUrls.A320;
-  plane.clear();
-  loadRealGLB(url,plane,ok=>{
-    msg.textContent=ok?"🟢 "+selected+" geladen":"🔴 "+selected+" konnte nicht geladen werden";
-  });
-}
-select.onchange=()=>{selected=select.value;loadSelectedAircraft()};
-
- function end(t){alive=false;stop3D();b.innerHTML="<strong>"+t+" – Punkte: "+score+"</strong><br><button onclick=\"flightSim()\">Nochmal</button>"}
- loadSelectedAircraft();
-
- function loop(now){
-  if(!alive)return;
-  const dt=Math.min((now-last)/16,2);last=now;const power=+throttle.value;
-  const speed=.025+power*.00075;world.position.z+=speed*dt;distance+=speed*dt*.2;
-  fuel=Math.max(0,fuel-power*.00105*dt);if(fuel<=0)return end("⛽ Treibstoff leer");
-  const targetAlt=takeoff?1800:Math.max(500,1800+py*650);alt+=(targetAlt-alt)*.015*dt;
-  heading=(heading+px*.12*dt+360)%360;plane.position.x=px;plane.position.y=py;plane.rotation.z=-px*.07;plane.rotation.x=-py*.035;
-  if(weatherMode==="rain"){py+=Math.sin(now/260)*.0015*dt;rain.position.z=world.position.z%6;rainGeo.attributes.position.needsUpdate=true}
-  rainGeo.attributes.position.array.forEach((v,i)=>{if(i%3===1){rainGeo.attributes.position.array[i]=v-.18*dt;if(v<0)rainGeo.attributes.position.array[i]=25}});
-  rainGeo.attributes.position.needsUpdate=true;
-  traffic.forEach((t,i)=>{t.g.position.x=t.baseX+Math.sin(now/1500+t.phase)*8;t.g.position.y=t.baseY+Math.sin(now/1000+t.phase)*.8;t.g.position.z=t.baseZ+((now/55)%100);if(t.g.position.z>18)t.g.position.z=-140});
-  if(!takeoff&&distance>1.2){takeoff=true;score+=100;missionIndex=1;msg.textContent="🛫 Abgehoben! Halte den Kurs."}
-  if(takeoff&&distance>7&&distance<13){missionIndex=1;msg.textContent="☁️ Reiseflug – weiche dem Verkehr aus."}
-  if(takeoff&&distance>14){landing=true;missionIndex=2;msg.textContent="🛬 Landeanflug – Klappen und Fahrwerk setzen."}
-  if(landing&&gear&&flaps&&!missionDone){missionDone=true;score+=250;msg.textContent="✅ Landevorbereitung korrekt";missionIndex=3}
-  if(landing&&distance>23){
-   if(Math.abs(px)<1.1&&py>-1.7&&py<-.8&&power<35&&gear&&flaps){score+=500;missionIndex=4;return end("🛬 Perfekte Landung!")}
-   return end("💥 Landung verpasst");
-  }
-  if(py<-1.75||py>3.15)return end("⚠️ Flugzeug außer Kontrolle");
-  traffic.forEach(t=>{if(Math.abs(t.g.position.x-plane.position.x)<1.4&&Math.abs(t.g.position.y-plane.position.y)<1.2&&Math.abs(t.g.position.z-plane.position.z)<2.5)alive=false});
-  if(!alive)return end("💥 Kollision mit Flugverkehr");
-  score+=Math.max(0,Math.floor(power*.018*dt));
-  hud.innerHTML="ALT "+Math.round(alt)+" m<br>SPEED "+Math.round(140+power*2.2)+" km/h<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°<br>THR "+power+"%<br>DIST "+distance.toFixed(1)+" km";
-  fuelBox.textContent="⛽ FUEL "+Math.round(fuel)+"%";scoreBox.textContent="🏆 "+score+" Punkte";mission.textContent="🎯 "+(missions[Math.min(missionIndex,3)]);
-  inst.innerHTML="▰ HORIZON<br>"+(py>0?"▲ CLIMB":"▼ DESCENT")+"<br>COMPASS "+String(Math.round(heading)).padStart(3,"0")+"°<br>ROLL "+Math.round(-px*8)+"°<br>GEAR "+(gear?"DOWN":"UP")+"<br>FLAPS "+(flaps?"OUT":"UP");
-  if(viewMode==="cockpit"){g.camera.position.set(0,1.0,2.7);g.camera.lookAt(0,.6,-4)}
-  else if(viewMode==="wing"){g.camera.position.set(4.2,1.0,3.0);g.camera.lookAt(0,.2,-8)}
-  else if(viewMode==="cabin"){g.camera.position.set(0,.35,2.2);g.camera.lookAt(0,.2,-5)}
-  else {g.camera.position.set(0,2.4,8);g.camera.lookAt(0,.2,0)}
-  if(weatherMode==="night")airportLights.forEach(l=>l.intensity=2.2);
-  g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop);
- }
- loop(performance.now());
+ const hud=document.createElement("div");hud.className="flightHud";b.appendChild(hud);
+ const urls={A320:"assets/A320_nologo.glb",A350:"assets/A350_nologo.glb",B737:"assets/B737_nologo.glb"};
+ let selected="A320",px=0,py=.2,heading=0,alt=500,last=performance.now(),alive=true;
+ function loadAircraft(){plane.clear();msg.textContent="🛫 "+selected+" wird geladen …";loadRealGLB(urls[selected],plane,ok=>msg.textContent=ok?"🟢 "+selected+" geladen":"🔴 GLB nicht geladen");}
+ select.onchange=()=>{selected=select.value;loadAircraft()};
+ controls.querySelector('[data-fs="left"]').onpointerdown=()=>px=Math.max(-4.5,px-.45);
+ controls.querySelector('[data-fs="right"]').onpointerdown=()=>px=Math.min(4.5,px+.45);
+ controls.querySelector('[data-fs="up"]').onpointerdown=()=>py=Math.min(3.2,py+.28);
+ controls.querySelector('[data-fs="down"]').onpointerdown=()=>py=Math.max(-1.8,py-.28);
+ [["A320",-12,-20],["A350",12,-35],["B737",-12,-50]].forEach(a=>{const h=new THREE.Group();h.position.set(a[1],0,a[2]);world.add(h);loadRealGLB(urls[a[0]],h,ok=>{if(!ok)h.add(cube([2.5,.8,5],0x777777));});});
+ function loop(now){if(!alive)return;const dt=Math.min((now-last)/16,2);last=now;world.position.z+=.045*dt;plane.position.x=px;plane.position.y=py;plane.rotation.z=-px*.07;plane.rotation.x=-py*.035;heading=(heading+px*.08*dt+360)%360;alt+=(500+py*500-alt)*.01*dt;hud.innerHTML="ALT "+Math.round(alt)+" m<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°";g.camera.position.set(0,2.6,8);g.camera.lookAt(0,.2,0);g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
+ loadAircraft();loop(performance.now());
 }
 ;window.flightSim=flightSimReal;
 
