@@ -88,29 +88,61 @@ function ensureOBJLoader(done){
 }
 function flightSimReal(){
  if(!THREE)return ensureThree(()=>flightSimReal()); stop3D();
- const b=document.getElementById("flightSimBox"),g=make3D(b,{bg:0x72b8e8,fog:0x72b8e8});g.camera.position.set(0,2.2,8);
+ const b=document.getElementById("flightSimBox"),g=make3D(b,{bg:0x72b8e8,fog:0x72b8e8});
+ g.camera.position.set(0,2.4,8);
  const world=new THREE.Group();g.scene.add(world);
- const ground=new THREE.Mesh(new THREE.PlaneGeometry(100,220),mat(0x3f8f45));ground.rotation.x=-Math.PI/2;ground.position.set(0,-2.25,-70);world.add(ground);
- const runway=cube([7,.06,65],0x4a4a4a);runway.position.set(0,-2.18,-8);world.add(runway);
- for(let z=20;z>-55;z-=6){const q=cube([.25,.04,2.5],0xffffff);q.position.set(0,-2.1,z);world.add(q)}
- for(let x=-35;x<=35;x+=7)for(let z=15;z>-120;z-=12){const t=cube([.25,.9,.25],0x70452b),c=sphere(.75,0x237a3a),tree=new THREE.Group();t.position.y=-1.65;c.position.y=-.8;tree.add(t,c);tree.position.set(x+(Math.random()-.5)*2,0,z+(Math.random()-.5)*4);tree.scale.setScalar(.8+Math.random()*.5);world.add(tree)}
+ const ground=new THREE.Mesh(new THREE.PlaneGeometry(180,320),mat(0x3f8f45));ground.rotation.x=-Math.PI/2;ground.position.set(0,-2.25,-110);world.add(ground);
+ const runway=cube([8,.06,85],0x4a4a4a);runway.position.set(0,-2.18,-12);world.add(runway);
+ for(let z=30;z>-75;z-=6){const q=cube([.3,.04,2.7],0xffffff);q.position.set(0,-2.1,z);world.add(q)}
+ const shoulderL=cube([.15,.04,85],0xffd84d),shoulderR=shoulderL.clone();shoulderL.position.set(-4,-2.1,-12);shoulderR.position.set(4,-2.1,-12);world.add(shoulderL,shoulderR);
+ for(let x=-45;x<=45;x+=7)for(let z=20;z>-180;z-=12){if(Math.abs(x)<6)continue;const t=cube([.25,.9,.25],0x70452b),cc=sphere(.75,0x237a3a),tree=new THREE.Group();t.position.y=-1.65;cc.position.y=-.8;tree.add(t,cc);tree.position.set(x+(Math.random()-.5)*2,0,z+(Math.random()-.5)*4);tree.scale.setScalar(.8+Math.random()*.6);world.add(tree)}
+ for(let x=-35;x<=35;x+=14){const hill=sphere(6,0x507c4b);hill.scale.y=.5;hill.position.set(x,-.2,-90-Math.random()*45);world.add(hill)}
+ const clouds=new THREE.Group();for(let i=0;i<24;i++){const cl=new THREE.Group();for(let j=0;j<5;j++){const p=sphere(.7,0xffffff);p.position.set((Math.random()-.5)*1.8,Math.random()*.8,(Math.random()-.5)*1.5);cl.add(p)}cl.position.set((Math.random()-.5)*45,5+Math.random()*7,-20-Math.random()*130);cl.scale.setScalar(1+Math.random()*1.3);clouds.add(cl)}world.add(clouds);
+ // Simple airport terminal, tower and hangars
+ const terminal=cube([15,2.8,5],0xb8c0c8);terminal.position.set(14,-.8,-18);world.add(terminal);
+ const roof=cube([16,.35,5.5],0x34495e);roof.position.set(14,.7,-18);world.add(roof);
+ for(let x=8;x<=20;x+=3){const win=cube([1.5,1,.08],0x75c9e8);win.position.set(x,.0,-15.42);world.add(win)}
+ const tower=cube([1.5,7,1.5],0xd8d8d8);tower.position.set(25,1.2,-20);world.add(tower);
+ const cab=cube([2.5,1,2.5],0x34495e);cab.position.set(25,4.8,-20);world.add(cab);
+ for(let x=-18;x<=-10;x+=4){const hang=cube([3.5,2.8,5],0x9aa3ad);hang.position.set(x,-.8,-18);world.add(hang)}
  addRealAirliners(world);
- addRealAirport(world);
+ const traffic=[];
+ [["A350",-15,2.8,-55],["B737",16,3.8,-82]].forEach((v,i)=>{
+  const tg=new THREE.Group();tg.position.set(v[1],v[2],v[3]);world.add(tg);traffic.push({g:tg,phase:i*2,baseX:v[1],baseY:v[2],baseZ:v[3],file:i===0?"assets/A350_nologo.glb":"assets/B737_nologo.glb"});
+  loadRealGLB(v[4],tg,()=>{tg.scale.setScalar(.75);tg.rotation.y=Math.PI});
+ });
  const plane=new THREE.Group();plane.position.set(0,.2,5);g.scene.add(plane);
  const hud=document.createElement("div");hud.className="flightHud";b.appendChild(hud);
  const controls=document.createElement("div");controls.className="flightSimControls";controls.innerHTML='<button data-fs="left">◀</button><button data-fs="up">▲</button><button data-fs="down">▼</button><button data-fs="right">▶</button>';b.appendChild(controls);
  const throttle=document.createElement("input");throttle.type="range";throttle.min="0";throttle.max="100";throttle.value="55";throttle.className="flightThrottle";b.appendChild(throttle);
- const msg=document.createElement("div");msg.className="flightMessage";msg.textContent="🛫 Echtes 3D-Flugzeug wird geladen …";b.appendChild(msg);
+ const msg=document.createElement("div");msg.className="flightMessage";msg.textContent="🛫 A320 wird geladen …";b.appendChild(msg);
+ const select=document.createElement("select");select.innerHTML='<option value="A320">✈️ A320</option><option value="A350">✈️ A350</option><option value="B737">✈️ B737</option>';select.style.cssText="position:absolute;right:10px;top:42px;z-index:12;padding:4px;border-radius:6px";b.appendChild(select);
+ const fuelBox=document.createElement("div");fuelBox.style.cssText="position:absolute;right:10px;top:72px;z-index:11;font:700 11px monospace;background:#0008;padding:4px 6px;border-radius:5px";b.appendChild(fuelBox);
+ const scoreBox=document.createElement("div");scoreBox.style.cssText="position:absolute;left:10px;bottom:62px;z-index:11;font:700 11px monospace;background:#0008;padding:4px 6px;border-radius:5px";b.appendChild(scoreBox);
  const credit=document.createElement("div");credit.className="flightCredit";credit.textContent="Aircraft models: amvlab/aircraft-models — CC BY 4.0";b.appendChild(credit);
- let px=0,py=.2,heading=0,alt=500,distance=0,alive=true,last=performance.now(),takeoff=false,landing=false;
+ let px=0,py=.2,heading=0,alt=500,distance=0,fuel=100,score=0,alive=true,last=performance.now(),takeoff=false,landing=false,selected="A320";
  function steer(dx,dy){px=Math.max(-4.5,Math.min(4.5,px+dx));py=Math.max(-1.8,Math.min(3.2,py+dy))}
  controls.querySelector("[data-fs=left]").onpointerdown=()=>steer(-.45,0);controls.querySelector("[data-fs=right]").onpointerdown=()=>steer(.45,0);controls.querySelector("[data-fs=up]").onpointerdown=()=>steer(0,.28);controls.querySelector("[data-fs=down]").onpointerdown=()=>steer(0,-.28);
  document.onkeydown=e=>{if(e.key==="ArrowLeft")steer(-.35,0);if(e.key==="ArrowRight")steer(.35,0);if(e.key==="ArrowUp")steer(0,.22);if(e.key==="ArrowDown")steer(0,-.22);if(e.key==="w"||e.key==="W")throttle.value=Math.min(100,+throttle.value+5);if(e.key==="s"||e.key==="S")throttle.value=Math.max(0,+throttle.value-5)};
- function end(t){alive=false;stop3D();b.innerHTML="<strong>"+t+"</strong><br><button onclick=\"flightSim()\">Nochmal</button>"}
- loadRealGLB("assets/A320_nologo.glb",plane,ok=>{if(ok){msg.textContent="🟢 ECHTES A320-3D-MODELL GELADEN"}else{msg.textContent="🔴 A320-GLB konnte nicht geladen werden";const err=document.createElement("div");err.style.cssText="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#700;color:#fff;padding:10px;border-radius:8px;font-weight:bold;z-index:20";err.textContent="A320-Modell nicht erreichbar";b.appendChild(err)}});
- function loop(now){if(!alive)return;const dt=Math.min((now-last)/16,2);last=now;const power=+throttle.value,speed=.025+power*.00075;world.position.z+=speed*dt;distance+=speed*dt*.2;const targetAlt=takeoff?1800:Math.max(500,1800+py*650);alt+=(targetAlt-alt)*.015*dt;heading=(heading+px*.12*dt+360)%360;plane.position.x=px;plane.position.y=py;plane.rotation.z=-px*.07;plane.rotation.x=-py*.035;
- if(!takeoff&&distance>1.2){takeoff=true;msg.textContent="🛫 Abgehoben!"}if(takeoff&&distance>16){landing=true;msg.textContent="🛬 Landeanflug: zurück zur Landebahn!"}if(landing&&distance>25){if(Math.abs(px)<1.1&&py>-1.7&&py<-.8&&power<35)end("🛬 Perfekte Landung!");else end("💥 Landung verpasst")}if(py<-1.75||py>3.15)return end("⚠️ Flugzeug außer Kontrolle");
- hud.innerHTML="ALT "+Math.round(alt)+" m<br>SPEED "+Math.round(140+power*2.2)+" km/h<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°<br>THR "+power+"%";g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
+ select.onchange=()=>{selected=select.value;plane.clear();loadRealGLB("assets/"+selected+"_nologo.glb",plane,ok=>msg.textContent=ok?"🟢 "+selected+" geladen":"🔴 "+selected+" konnte nicht geladen werden")};
+ function end(t){alive=false;stop3D();b.innerHTML="<strong>"+t+" – Punkte: "+score+"</strong><br><button onclick=\"flightSim()\">Nochmal</button>"}
+ loadRealGLB("assets/A320_nologo.glb",plane,ok=>{if(ok)msg.textContent="🟢 A320 geladen – Startbereit";else msg.textContent="🔴 A320 konnte nicht geladen werden"});
+ function loop(now){
+  if(!alive)return;const dt=Math.min((now-last)/16,2);last=now;const power=+throttle.value;
+  const speed=.025+power*.00075;world.position.z+=speed*dt;distance+=speed*dt*.2;
+  fuel=Math.max(0,fuel-power*.0012*dt);if(fuel<=0)return end("⛽ Treibstoff leer");
+  const targetAlt=takeoff?1800:Math.max(500,1800+py*650);alt+=(targetAlt-alt)*.015*dt;
+  heading=(heading+px*.12*dt+360)%360;plane.position.x=px;plane.position.y=py;plane.rotation.z=-px*.07;plane.rotation.x=-py*.035;
+  traffic.forEach((t,i)=>{t.g.position.x=t.baseX+Math.sin(now/1400+t.phase)*8;t.g.position.y=t.baseY+Math.sin(now/900+t.phase)*.7;t.g.position.z=t.baseZ+((now/45)%80);if(t.g.position.z>15)t.g.position.z=-110});
+  if(!takeoff&&distance>1.2){takeoff=true;score+=100;msg.textContent="🛫 Abgehoben!";}
+  if(takeoff&&distance>7&&distance<13)msg.textContent="☁️ Reiseflug – weiche dem Verkehr aus.";
+  if(takeoff&&distance>16){landing=true;msg.textContent="🛬 Landeanflug – bringe dich zur Bahnmitte."}
+  if(landing&&distance>25){if(Math.abs(px)<1.1&&py>-1.7&&py<-.8&&power<35){score+=500;end("🛬 Perfekte Landung!")}else end("💥 Landung verpasst")}
+  if(py<-1.75||py>3.15)return end("⚠️ Flugzeug außer Kontrolle");
+  traffic.forEach(t=>{if(Math.abs(t.g.position.x-plane.position.x)<1.2&&Math.abs(t.g.position.y-plane.position.y)<1.1&&Math.abs(t.g.position.z-plane.position.z)<2)return end("💥 Kollision mit Flugverkehr")});
+  score+=Math.max(0,Math.floor(power*.02*dt));hud.innerHTML="ALT "+Math.round(alt)+" m<br>SPEED "+Math.round(140+power*2.2)+" km/h<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°<br>THR "+power+"%<br>DIST "+distance.toFixed(1)+" km";fuelBox.textContent="⛽ FUEL "+Math.round(fuel)+"%";scoreBox.textContent="🏆 "+score+" Punkte";
+  g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop);
+ }
  loop(performance.now());
 }
 window.flightSim=flightSimReal;
