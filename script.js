@@ -198,6 +198,26 @@ function flightSimReal(){
   const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);
   loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([2,.8,2],0x777777));});
  });
+
+ // Verified CC0 Quaternius GLB scenery.
+ // These models are from a repository that includes the Quaternius CC0 license file.
+ const CC0="https://raw.githubusercontent.com/anshaneja5/skyline-run/main/public/assets/models/";
+ const cc0Glbs=[
+  ["CC0 large building",CC0+"b_large.glb",-58,-2,-118,1.8],
+  ["CC0 medium building",CC0+"b_medium.glb",58,-2,-132,1.7],
+  ["CC0 small building",CC0+"b_small.glb",-62,-2,-150,1.5],
+  ["CC0 small building 2",CC0+"b_small.glb",62,-2,-164,1.5],
+  ["CC0 propeller aircraft",CC0+"prop_ac.glb",-18,0,-112,1.2],
+  ["CC0 aircraft",CC0+"plane.glb",18,0,-126,1.2],
+  ["CC0 tree 1",CC0+"tree1.glb",-70,-2,-138,1.8],
+  ["CC0 tree 2",CC0+"tree2.glb",70,-2,-151,1.8],
+  ["CC0 tree 3",CC0+"tree3.glb",-72,-2,-176,1.8],
+  ["CC0 bush",CC0+"bush.glb",72,-2,-184,2.0]
+ ];
+ cc0Glbs.forEach(a=>{
+  const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);
+  loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([1.5,.6,1.5],0x777777));});
+ });
  // Tropical island-style flight scenery: water, islands, hills, roads, villages, bridges and vegetation.
  const water=new THREE.Mesh(new THREE.PlaneGeometry(700,700),mat(0x197aa3));
  water.rotation.x=-Math.PI/2;water.position.set(0,-2.35,-150);world.add(water);
