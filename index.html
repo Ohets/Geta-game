@@ -3,9 +3,9 @@
 <body><header><h1>🎮 GETA GAMES</h1><p>Spannende Mini-Games – direkt im Browser.</p></header>
 <main><div class="games">
 <article><h2>⚡ Reaction Rush</h2><p>Warte auf Grün und tippe so schnell wie möglich.</p><button onclick="reaction()">Start</button><div id="reactionResult"></div></article>
-<article><h2>🚀 Space Dodger</h2><p>Bewege dein Schiff und überlebe so lange wie möglich.</p><div class="gamebox" id="spaceBox"><button onclick="space()">Start</button></div></article>
+<article><h2>🚀 Space Dodger</h2><p>Bewege dein Schiff und überlebe so lange wie möglich.</p><button class="fullscreenBtn" onclick="toggleFullscreen(this)">⛶ Vollbild</button><div class="gamebox" id="spaceBox"><button onclick="space()">Start</button></div></article>
 <article><h2>🧠 Memory Match</h2><p>Finde alle gleichen Paare.</p><div id="memoryResult"></div><button onclick="memory()">Start</button></article>
-<article><h2>🎯 Aim Challenge</h2><p>Triff 10 Ziele möglichst schnell.</p><div class="gamebox" id="aimBox"><button onclick="aim()">Start</button></div></article>
+<article><h2>🎯 Aim Challenge</h2><p>Triff 10 Ziele möglichst schnell.</p><button class="fullscreenBtn" onclick="toggleFullscreen(this)">⛶ Vollbild</button><div class="gamebox" id="aimBox"><button onclick="aim()">Start</button></div></article>
 <article><h2>✈️ Flappy Plane</h2><p>Fliege durch die Lücken und sammle Punkte.</p><div class="gamebox flappyBox" id="flappyBox"><button onclick="flappy()">Start</button></div></article>
 <article><h2>🏎️ Racing</h2><p>Weiche dem Verkehr aus und fahre so weit wie möglich.</p><div class="gamebox racingBox" id="racingBox"><button onclick="racing()">Start</button></div></article>
 <article><h2>🏓 Pong</h2><p>Spiele gegen den Computer – wer zuerst 5 Punkte hat.</p><div class="gamebox pongBox" id="pongBox"><button onclick="pong()">Start</button></div></article>
