@@ -89,209 +89,59 @@ function ensureOBJLoader(done){
 function flightSimReal(){
  if(!THREE)return ensureThree(()=>flightSimReal());
  stop3D();
- const b=document.getElementById("flightSimBox"),g=make3D(b,{bg:0x72b8e8,fog:0x72b8e8});
+ const b=document.getElementById("flightSimBox"),g=make3D(b,{bg:0x79bfe8,fog:0x79bfe8});
  const world=new THREE.Group();g.scene.add(world);
- const ground=new THREE.Mesh(new THREE.PlaneGeometry(220,360),mat(0x3f8f45));ground.rotation.x=-Math.PI/2;ground.position.set(0,-2.25,-135);world.add(ground);
- const runway=cube([9,.08,100],0x444444);runway.position.set(0,-2.18,-18);world.add(runway);
- for(let z=35;z>-85;z-=6){const q=cube([.32,.04,2.8],0xffffff);q.position.set(0,-2.1,z);world.add(q)}
- const plane=new THREE.Group();plane.position.set(0,.2,5);g.scene.add(plane);
- const msg=document.createElement("div");msg.className="flightMessage";msg.textContent="🛫 3D-Simulator wird geladen …";b.appendChild(msg);
- const select=document.createElement("select");select.innerHTML='<option value="A320">✈️ A320</option><option value="A350">✈️ A350</option><option value="B737">✈️ B737</option><option value="A380">✈️ A380</option><option value="B787">✈️ B787</option><option value="EVTOL">🚁 EVTOL</option><option value="Drone">🚁 Drone</option>';select.style.cssText="position:absolute;right:10px;top:42px;z-index:12;padding:4px";b.appendChild(select);
- const controls=document.createElement("div");controls.className="flightSimControls";controls.innerHTML='<button data-fs="left">◀</button><button data-fs="up">▲</button><button data-fs="down">▼</button><button data-fs="right">▶</button>';b.appendChild(controls);
+ const water=new THREE.Mesh(new THREE.PlaneGeometry(900,900),mat(0x167ca4,.75));water.rotation.x=-Math.PI/2;water.position.set(0,-2.55,-190);world.add(water);
+ const ground=new THREE.Mesh(new THREE.PlaneGeometry(300,520),mat(0x4d9147));ground.rotation.x=-Math.PI/2;ground.position.set(0,-2.35,-185);world.add(ground);
+ function runway(x,z,len,w){const r=cube([w,.08,len],0x444444);r.position.set(x,-2.18,z);world.add(r);for(let p=z+len/2-7;p>z-len/2+7;p-=7){const m=cube([.34,.04,3.1],0xffffff);m.position.set(x,-2.11,p);world.add(m)}const a=cube([.18,.04,len],0xf2f2f2),q=a.clone();a.position.set(x-w/2+.35,-2.11,z);q.position.set(x+w/2-.35,-2.11,z);world.add(a,q)}
+ runway(0,-28,112,10);runway(-105,-160,72,7);
+ const taxi=cube([5,.06,185],0x555555);taxi.position.set(17,-2.13,-82);world.add(taxi);
+ for(let z=8;z>-175;z-=12){const m=cube([.2,.03,4],0xf0d85a);m.position.set(17,-2.08,z);world.add(m)}
+ function road(x,z,w,d,rot=0){const r=cube([w,.055,d],0x4d4d4d);r.position.set(x,-2.08,z);r.rotation.y=rot;world.add(r);const l=cube([.12,.025,d*.72],0xe0dfb4);l.position.set(x,-2.015,z);l.rotation.y=rot;world.add(l)}
+ road(-28,-118,4,210,.04);road(48,-142,4,190,-.035);road(4,-210,5,170,Math.PI/2);
+ function island(x,z,w,d){const m=new THREE.Mesh(new THREE.CylinderGeometry(w*.42,w,w*.13,28),mat(0x4b9145));m.scale.z=d/w;m.position.set(x,-2.08,z);world.add(m);for(let i=0;i<4;i++){const h=new THREE.Mesh(new THREE.ConeGeometry(w*.1,w*.28,12),mat(0x568441));h.position.set(x+(i-1.5)*w*.2,-1.72,z+(i%2)*d*.2-d*.1);world.add(h)}}
+ island(-82,-72,62,92);island(82,-105,66,105);island(-72,-235,76,115);island(92,-315,70,120);
+ function tree(x,z,s=1){const h=new THREE.Group(),t=cube([.24,1.4,.24],0x74502f),c=sphere(.85,0x2f7d3c);t.position.y=-1.2;c.position.y=-.05;h.add(t,c);h.position.set(x,-.15,z);h.scale.setScalar(s);world.add(h)}
+ for(let i=0;i<72;i++){const side=i%2?1:-1;tree(side*(14+(i*19)%62),18-i*4.5,.65+(i%4)*.13)}
+ for(let i=0;i<35;i++)tree(-70+(i%7)*20,-90-Math.floor(i/7)*24,.7+(i%3)*.15);
+ for(let i=0;i<16;i++){const side=i%2?1:-1,h=new THREE.Mesh(new THREE.ConeGeometry(12+(i%4)*4,18+(i%5)*5,12),mat(0x587d4c));h.position.set(side*(88+(i%3)*12),5,-35-i*22);world.add(h)}
+ const apron=cube([58,.07,48],0x555555);apron.position.set(0,-2.12,-6);world.add(apron);
+ const terminal=cube([26,2.8,8],0xb9c0c8);terminal.position.set(0,-.65,18);world.add(terminal);const roof=cube([28,.35,10],0x303943);roof.position.set(0,.95,18);world.add(roof);
+ const tower=new THREE.Group(),shaft=cube([2.2,9,2.2],0x9ea7ad),cab=cube([4,1.5,4],0x24374a);shaft.position.y=2.2;cab.position.y=6.7;tower.add(shaft,cab);tower.position.set(20,-2,-2);world.add(tower);
+ const bu=["assets/environment/Building_Small.glb","assets/environment/Building_Medium.glb","assets/environment/Building_Large.glb"];
+ const placements=[[-18,-2,20,2],[20,-2,20,1.7],[-24,-2,-48,1.8],[24,-2,-54,1.7],[-30,-2,-76,1.5],[30,-2,-82,1.5],[-42,-2,-112,1.8],[-25,-2,-124,1.7],[25,-2,-130,1.5],[42,-2,-142,1.8],[-38,-2,-168,1.6],[38,-2,-178,1.5],[-62,-2,-202,1.5],[62,-2,-214,1.6]];
+ placements.forEach(a=>{const h=new THREE.Group();h.position.set(a[0],a[1],a[2]);h.scale.setScalar(a[3]);world.add(h);loadRealGLB(bu[Math.abs(a[0]+a[2])%3],h,()=>{})});
+ for(let row=0;row<6;row++)for(let col=0;col<7;col++){const x=-54+col*18+(row%2)*5,z=-95-row*22;if(Math.abs(x)<12)continue;const h=new THREE.Group();h.position.set(x,-2,z);h.scale.setScalar(1.25+(row%3)*.12);world.add(h);loadRealGLB(bu[(row*7+col)%3],h,()=>{})}
+ const harbour=cube([48,.08,30],0x4d5960);harbour.position.set(73,-2.08,-225);world.add(harbour);for(let i=0;i<5;i++){const d=cube([5,.12,26],0x775a3e);d.position.set(48+i*12,-1.96,-225);world.add(d)}
+ const bridge=cube([9,.4,58],0x696969);bridge.position.set(0,-1.85,-250);world.add(bridge);
+ const props=[["assets/environment/Tree_Quaternius_1.glb",-70,-2,-120,1.5],["assets/environment/Tree_Quaternius_2.glb",70,-2,-145,1.5],["assets/environment/Tree_Quaternius_3.glb",-72,-2,-180,1.5],["assets/environment/Bush.glb",72,-2,-190,1.7],["assets/environment/Rock_01.glb",-58,-2,-228,1.2],["assets/environment/Rock_02.glb",58,-2,-238,1.2],["assets/environment/Bench_01.glb",-12,-2,-72,1.1],["assets/environment/Fence_01.glb",12,-2,-72,1]];
+ props.forEach(a=>{const h=new THREE.Group();h.position.set(a[1],a[2],a[3]);h.scale.setScalar(a[4]);world.add(h);loadRealGLB(a[0],h,()=>{})});
+ const urls={A320:"assets/A320_nologo.glb",A350:"assets/A350_nologo.glb",B737:"assets/B737_nologo.glb",A380:"assets/imported/A380_nologo.glb",B787:"assets/imported/B787_nologo.glb",EVTOL:"assets/imported/EVTOL_nologo.glb",Drone:"assets/imported/drone_nologo.glb"};
+ const traffic=[];[["A320",-16,2,-38,.8],["B737",18,4,-70,.65],["A350",-22,5,-118,.7],["B787",25,7,-166,.65],["EVTOL",-38,3,-205,.55]].forEach(a=>{const h=new THREE.Group();h.position.set(a[1],a[2],a[3]);h.scale.setScalar(a[4]);world.add(h);traffic.push(h);loadRealGLB(urls[a[0]],h,()=>{})});
+ const plane=new THREE.Group();plane.position.set(0,.25,6);g.scene.add(plane);
+ const msg=document.createElement("div");msg.className="flightMessage";msg.textContent="🛫 Hauptflughafen – starte über die lange Startbahn";b.appendChild(msg);
  const hud=document.createElement("div");hud.className="flightHud";b.appendChild(hud);
- const urls={
-  A320:"assets/A320_nologo.glb",
-  A350:"assets/A350_nologo.glb",
-  B737:"assets/B737_nologo.glb",
-  A380:"assets/imported/A380_nologo.glb",
-  B787:"assets/imported/B787_nologo.glb",
-  EVTOL:"assets/imported/EVTOL_nologo.glb",
-  Drone:"assets/imported/drone_nologo.glb"
-};
- let selected="A320",px=0,py=.2,heading=0,alt=500,last=performance.now(),alive=true;
- function loadAircraft(){plane.clear();msg.textContent="🛫 "+selected+" wird geladen …";loadRealGLB(urls[selected],plane,ok=>msg.textContent=ok?"🟢 "+selected+" geladen":"🔴 GLB nicht geladen");}
- select.onchange=()=>{selected=select.value;loadAircraft()};
- controls.querySelector('[data-fs="left"]').onpointerdown=()=>px=Math.max(-4.5,px-.45);
- controls.querySelector('[data-fs="right"]').onpointerdown=()=>px=Math.min(4.5,px+.45);
- controls.querySelector('[data-fs="up"]').onpointerdown=()=>py=Math.min(3.2,py+.28);
- controls.querySelector('[data-fs="down"]').onpointerdown=()=>py=Math.max(-1.8,py-.28);
- [["A320",-12,-20],["A350",12,-35],["B737",-12,-50],["A380",14,-65],["B787",-14,-80],["EVTOL",14,-95],["Drone",-14,-108]].forEach(a=>{const h=new THREE.Group();h.position.set(a[1],0,a[2]);world.add(h);loadRealGLB(urls[a[0]],h,ok=>{if(!ok)h.add(cube([2.5,.8,5],0x777777));});});
- // Additional GLB airport and city scenery. Each model is isolated in its own group so a failed remote model cannot stop the game.
- const sceneryUrls=[
-  ["Airport hangar","assets/environment/Building_Large.glb",-22,-2,-18,2.5],
-  ["Airport building","assets/environment/Building_Medium.glb",22,-2,-28,2.2],
-  ["Terminal","assets/environment/Building_Large.glb",-24,-2,-52,2.2],
-  ["Hangar 2","assets/environment/Building_Medium.glb",24,-2,-62,2.3],
-  ["City building 1","assets/environment/Building_Small.glb",-35,-2,-95,2],
-  ["City building 2","assets/environment/Building_Medium.glb",-22,-2,-105,2],
-  ["City building 3","assets/environment/Building_Small.glb",25,-2,-110,2],
-  ["City building 4","assets/environment/Building_Large.glb",38,-2,-125,2],
-  ["City building 5","assets/environment/Building_Medium.glb",-38,-2,-130,2],
-  ["Vehicle","assets/environment/SmallPlane.glb",-10,0,-38,1.2],
-  ["Vehicle 2","assets/environment/SmallPlane.glb",10,0,-45,1.2]
- ];
-
- // Extra CC0 Kenney GLB scenery served from the public Bevy asset mirror.
- // These are real GLB files: commercial/suburban buildings, roads, trees and vehicles.
- const KENNEY="https://github.com/bevyengine/bevy_asset_files/raw/main/kenney";
- const kenneyGlbs=[
-  ["City tower A",KENNEY+"/city-kit-commercial/building-skyscraper-a.glb",-48,-2,-92,2.4],
-  ["City tower B",KENNEY+"/city-kit-commercial/building-skyscraper-b.glb",-36,-2,-108,2.2],
-  ["City tower C",KENNEY+"/city-kit-commercial/building-skyscraper-c.glb",-24,-2,-122,2.5],
-  ["City building D",KENNEY+"/city-kit-commercial/building-d.glb",30,-2,-100,2.0],
-  ["City building E",KENNEY+"/city-kit-commercial/building-e.glb",44,-2,-116,2.2],
-  ["Suburban house B",KENNEY+"/city-kit-suburban/building-type-b.glb",52,-2,-160,1.8],
-  ["Suburban house C",KENNEY+"/city-kit-suburban/building-type-c.glb",62,-2,-174,1.8],
-  ["Suburban house D",KENNEY+"/city-kit-suburban/building-type-d.glb",-52,-2,-165,1.8],
-  ["Suburban house E",KENNEY+"/city-kit-suburban/building-type-e.glb",-64,-2,-178,1.8],
-  ["Road straight 1",KENNEY+"/city-kit-roads/road-straight.glb",-28,-2,-150,1.0],
-  ["Road straight 2",KENNEY+"/city-kit-roads/road-straight.glb",28,-2,-172,1.0],
-  ["Road crossroad",KENNEY+"/city-kit-roads/road-crossroad-path.glb",0,-2,-195,1.0],
-  ["Tree small 1",KENNEY+"/city-kit-suburban/tree-small.glb",-58,-2,-145,2.0],
-  ["Tree large 1",KENNEY+"/city-kit-suburban/tree-large.glb",-72,-2,-158,2.0],
-  ["Tree small 2",KENNEY+"/city-kit-suburban/tree-small.glb",58,-2,-188,2.0],
-  ["Tree large 2",KENNEY+"/city-kit-suburban/tree-large.glb",72,-2,-202,2.0],
-  ["Car SUV",KENNEY+"/car-kit/suv.glb",-18,-1.5,-145,1.2],
-  ["Car sedan",KENNEY+"/car-kit/sedan.glb",18,-1.5,-155,1.2],
-  ["Car taxi",KENNEY+"/car-kit/taxi.glb",-18,-1.5,-180,1.2],
-  ["Car truck",KENNEY+"/car-kit/truck.glb",18,-1.5,-190,1.2]
- ];
- kenneyGlbs.forEach(a=>{
-  const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);
-  loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([1.5,.6,1.5],0x777777));});
- });
-
- // Large connected city district: a dense grid of real GLB buildings around procedural roads.
- const cityBuildings=[
-  "assets/environment/Building_Small.glb",
-  "assets/environment/Building_Medium.glb",
-  "assets/environment/Building_Large.glb"
- ];
- const cityRoads=new THREE.Group();cityRoads.position.y=.03;world.add(cityRoads);
- for(let r=0;r<7;r++){
-  const z=-78-r*18;
-  const road=cube([118,.06,3.8],0x4b4b4b);road.position.set(0,-1.94,z);cityRoads.add(road);
-  for(let x=-52;x<=52;x+=8){const mark=cube([4,.025,.12],0xe4e1bd);mark.position.set(x,-1.90,z);cityRoads.add(mark);}
- }
- for(let c=0;c<8;c++){
-  const x=-56+c*16;
-  const road=cube([3.8,.06,126],0x4b4b4b);road.position.set(x,-1.94,-132);cityRoads.add(road);
-  for(let z=-72;z>=-192;z-=8){const mark=cube([.12,.025,4],0xe4e1bd);mark.position.set(x,-1.90,z);cityRoads.add(mark);}
- }
- for(let row=0;row<5;row++)for(let col=0;col<7;col++){
-  const x=-48+col*16, z=-86-row*20;
-  const h=new THREE.Group();h.position.set(x,-2.0,z);h.scale.setScalar(2.0+(row%2)*.25);world.add(h);
-  loadRealGLB(cityBuildings[(row*7+col)%cityBuildings.length],h,ok=>{if(!ok)h.add(cube([4,6,4],0x8a8a8a));});
- }
- // City park blocks and a central boulevard.
- for(let p=0;p<8;p++){
-  const park=new THREE.Mesh(new THREE.BoxGeometry(10,.12,10),mat(0x4b9148));
-  park.position.set(-40+(p%4)*32,-1.86,-98-Math.floor(p/4)*72);world.add(park);
-  for(let t=0;t<4;t++)addTree(park.position.x-3+(t%2)*6,park.position.z-3+Math.floor(t/2)*6,.85);
- }
- const boulevard=cube([8,.07,126],0x3f3f3f);boulevard.position.set(0,-1.88,-132);world.add(boulevard);
- sceneryUrls.forEach(a=>{
-  const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);
-  loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([2,.8,2],0x777777));});
- });
-
- // Verified CC0 Quaternius GLB scenery.
- // These models are from a repository that includes the Quaternius CC0 license file.
- const CC0="assets/environment/";
- const cc0Glbs=[
-  ["CC0 large building",CC0+"Building_Large.glb",-58,-2,-118,1.8],
-  ["CC0 medium building",CC0+"Building_Medium.glb",58,-2,-132,1.7],
-  ["CC0 small building",CC0+"Building_Small.glb",-62,-2,-150,1.5],
-  ["CC0 small building 2",CC0+"Building_Small.glb",62,-2,-164,1.5],
-  ["CC0 propeller aircraft",CC0+"SmallPlane.glb",-18,0,-112,1.2],
-  ["CC0 tree 1",CC0+"Tree_Quaternius_1.glb",-70,-2,-138,1.8],
-  ["CC0 tree 2",CC0+"Tree_Quaternius_2.glb",70,-2,-151,1.8],
-  ["CC0 tree 3",CC0+"Tree_Quaternius_3.glb",-72,-2,-176,1.8],
-  ["CC0 bush",CC0+"Bush.glb",72,-2,-184,2.0]
- ];
- cc0Glbs.forEach(a=>{
-  const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);
-  loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([1.5,.6,1.5],0x777777));});
- });
-
- // Additional verified CC0 scenery from Kenney-based asset collection.
- const CC0K="assets/environment/";
- const cc0Kenney=[
-  ["CC0 suburban house 1",CC0K+"Building_Small.glb",-78,-2,-118,1.6],
-  ["CC0 suburban house 2",CC0K+"Building_Medium.glb",78,-2,-132,1.6],
-  ["CC0 modular building",CC0K+"Building_Large.glb",-82,-2,-154,1.7],
-  ["CC0 tiny town building",CC0K+"Building_Small.glb",82,-2,-168,1.5]
- ];
- cc0Kenney.forEach(a=>{const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([1.5,.6,1.5],0x777777));});});
-
- // Lazy CC0 GLB library from GitHub. The complete verified Kenney suburban GLB folder
- // is discovered automatically; models are downloaded only when the aircraft gets close.
- const CC0_GITHUB_API="https://api.github.com/repos/petroulacl/fps-buildings-env-kit/contents/buildings/kenney-city-kit-suburban/Models/GLB%20format?ref=main";
- const CC0_GITHUB_RAW="https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/main/buildings/kenney-city-kit-suburban/Models/GLB%20format/";
- const lazyCC0Objects=[];
- let lazyCC0Ready=false;
- async function discoverCC0GLBs(){ return; }
- function updateLazyCC0Objects(aircraft,world){
-  if(!lazyCC0Ready)return;
-  const ap=aircraft.getWorldPosition(new THREE.Vector3());
-  lazyCC0Objects.forEach(slot=>{
-   const wp=slot.position.clone();wp.z+=world.position.z;
-   const d=wp.distanceTo(ap);
-   if(!slot.loaded&&!slot.loading&&d<105){
-    slot.loading=true;
-    const g=new THREE.Group();g.position.copy(slot.position);world.add(g);slot.group=g;
-    loadRealGLB(slot.url,g,ok=>{slot.loaded=ok;slot.loading=false;if(!ok&&slot.group){world.remove(slot.group);slot.group=null;}});
-   }
-   if(slot.group)slot.group.visible=d<GLB_MAX_RENDER_DISTANCE;
-  });
- }
- discoverCC0GLBs();
- // Tropical island-style flight scenery: water, islands, hills, roads, villages, bridges and vegetation.
- const water=new THREE.Mesh(new THREE.PlaneGeometry(700,700),mat(0x197aa3));
- water.rotation.x=-Math.PI/2;water.position.set(0,-2.35,-150);world.add(water);
- function addIsland(x,z,w,d){
-  const island=new THREE.Mesh(new THREE.CylinderGeometry(w*.42,w,w*.12,32),mat(0x4f9b45));
-  island.scale.z=d/w; island.position.set(x,-2.05,z); world.add(island);
-  for(let i=0;i<5;i++){
-   const hill=new THREE.Mesh(new THREE.ConeGeometry(w*.12,w*.32,16),mat(0x568b3c));
-   hill.position.set(x+(i-2)*w*.12,-1.75,z+(i%2)*d*.12-d*.05); world.add(hill);
-  }
- }
- addIsland(-65,-55,55,85); addIsland(72,-95,58,90); addIsland(-75,-185,70,105); addIsland(85,-245,65,110);
- function addTree(x,z,scale=1){
-  const t=new THREE.Group();
-  const trunk=cube([.28,1.5,.28],0x76502e);trunk.position.y=-1.25;t.add(trunk);
-  const crown=sphere(.95,0x2f7f3b);crown.position.y=.0;t.add(crown);
-  t.position.set(x,-.25,z);t.scale.setScalar(scale);world.add(t);
- }
- for(let i=0;i<46;i++){
-  const side=i%2?1:-1, x=side*(13+(i*17)%55), z=20-(i*13);
-  addTree(x,z,0.7+((i%4)*.12));
- }
- function addRoad(x,z,w,d,rot=0){
-  const r=cube([w,.05,d],0x575757);r.position.set(x,-1.92,z);r.rotation.y=rot;world.add(r);
-  const line=cube([.12,.02,d*.75],0xd9d9b0);line.position.set(x,-1.87,z);line.rotation.y=rot;world.add(line);
- }
- addRoad(-31,-85,4,95,.03); addRoad(34,-125,4,120,-.02);
- addRoad(-1,-178,5,130,Math.PI/2);
- // Small island village houses.
- function addHouse(x,z,sc=1){
-  const h=new THREE.Group();
-  const body=cube([3*sc,2*sc,3*sc],0xd9d0b2);body.position.y=-.85;h.add(body);
-  const roof=new THREE.Mesh(new THREE.ConeGeometry(2.4*sc,1.5*sc,4),mat(0x8d3f2e));roof.position.y=.9*sc;roof.rotation.y=Math.PI/4;h.add(roof);
-  h.position.set(x,-.25,z);world.add(h);
- }
- addHouse(-48,-105,1);addHouse(-57,-118,.8);addHouse(48,-142,1);addHouse(58,-153,.75);
- // Bridge across a narrow water channel.
- const bridge=cube([8,.35,48],0x6f6f6f);bridge.position.set(0,-1.72,-215);world.add(bridge);
- for(let x=-3.2;x<=3.2;x+=1.6){const rail=cube([.12,1,48],0x777777);rail.position.set(x,-.9,-215);world.add(rail)}
- function loop(now){if(!alive)return;const dt=Math.min((now-last)/16,2);last=now;world.position.z+=.045*dt;updateGLBVisibility(world,plane);updateLazyCC0Objects(plane,world);plane.position.x=px;plane.position.y=py;plane.rotation.z=-px*.07;plane.rotation.x=-py*.035;heading=(heading+px*.08*dt+360)%360;alt+=(500+py*500-alt)*.01*dt;hud.innerHTML="ALT "+Math.round(alt)+" m<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°";g.camera.position.lerp(new THREE.Vector3(plane.position.x*.65,plane.position.y+2.6,plane.position.z+9),.12);g.camera.lookAt(plane.position.x,plane.position.y+.15,plane.position.z-2);g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
+ const select=document.createElement("select");select.innerHTML='<option value="A320">✈️ A320</option><option value="A350">✈️ A350</option><option value="B737">✈️ B737</option><option value="A380">✈️ A380</option><option value="B787">✈️ B787</option><option value="EVTOL">🚁 EVTOL</option><option value="Drone">🚁 Drone</option>';select.style.cssText="position:absolute;right:8px;top:42px;z-index:20;padding:5px";b.appendChild(select);
+ const weather=document.createElement("select");weather.innerHTML='<option value="clear">☀️ Klar</option><option value="rain">🌧️ Regen</option><option value="night">🌙 Nacht</option>';weather.style.cssText="position:absolute;right:8px;top:78px;z-index:20;padding:5px";b.appendChild(weather);
+ const throttle=document.createElement("input");throttle.type="range";throttle.min="0";throttle.max="100";throttle.value="60";throttle.className="flightThrottle";b.appendChild(throttle);
+ const controls=document.createElement("div");controls.className="flightSimControls";controls.innerHTML='<button data-fs="left">◀</button><button data-fs="up">▲</button><button data-fs="down">▼</button><button data-fs="right">▶</button>';b.appendChild(controls);
+ const extras=document.createElement("div");extras.style.cssText="position:absolute;left:8px;bottom:8px;z-index:20;display:flex;gap:4px;flex-wrap:wrap";extras.innerHTML='<button data-x="gear">🛬 Fahrwerk</button><button data-x="flaps">🪽 Klappen</button><button data-x="brake">🛑 Bremse</button>';b.appendChild(extras);
+ let selected="A320",px=0,py=.25,heading=0,alt=120,speed=0,last=performance.now(),alive=true,gear=true,flaps=false,brake=false,mission=0;
+ function loadAircraft(){plane.clear();msg.textContent="🛫 "+selected+" wird geladen …";loadRealGLB(urls[selected],plane,ok=>{msg.textContent=ok?"🟢 "+selected+" – Welt geladen":"🔴 Flugzeugmodell konnte nicht geladen werden"})}
+ select.onchange=()=>{selected=select.value;loadAircraft()};weather.onchange=()=>{const v=weather.value;if(v==="night"){g.scene.background.set(0x071326);g.scene.fog.color.set(0x071326)}else if(v==="rain"){g.scene.background.set(0x6d7884);g.scene.fog.color.set(0x6d7884)}else{g.scene.background.set(0x79bfe8);g.scene.fog.color.set(0x79bfe8)}};
+ function steer(dx,dy){px=Math.max(-5.5,Math.min(5.5,px+dx));py=Math.max(-1.7,Math.min(7,py+dy))}
+ controls.querySelector('[data-fs="left"]').onpointerdown=()=>steer(-.45,0);controls.querySelector('[data-fs="right"]').onpointerdown=()=>steer(.45,0);controls.querySelector('[data-fs="up"]').onpointerdown=()=>steer(0,.3);controls.querySelector('[data-fs="down"]').onpointerdown=()=>steer(0,-.3);
+ document.onkeydown=e=>{if(e.key==="ArrowLeft")steer(-.3,0);if(e.key==="ArrowRight")steer(.3,0);if(e.key==="ArrowUp")steer(0,.2);if(e.key==="ArrowDown")steer(0,-.2);if(e.key==="w"||e.key==="W")throttle.value=Math.min(100,+throttle.value+5);if(e.key==="s"||e.key==="S")throttle.value=Math.max(0,+throttle.value-5)};
+ extras.querySelector('[data-x="gear"]').onclick=()=>gear=!gear;extras.querySelector('[data-x="flaps"]').onclick=()=>flaps=!flaps;extras.querySelector('[data-x="brake"]').onclick=()=>{brake=true;setTimeout(()=>brake=false,900)};
+ function loop(now){if(!alive)return;const dt=Math.min((now-last)/16,2);last=now;const power=+throttle.value,base=.018+power*.00062;world.position.z+=base*dt*(brake?.25:1);plane.position.x=px;plane.position.y=py;plane.rotation.z=-px*.045;plane.rotation.x=-py*.025;heading=(heading+px*.045*dt+360)%360;speed=Math.max(0,base*2100);alt+=(120+py*155-alt)*.012*dt;traffic.forEach((t,i)=>{t.position.z+=(.018+i*.002)*dt;if(t.position.z>20)t.position.z=-300-i*22});
+ if(py<-1.7){alive=false;msg.textContent="💥 Bodenberührung – Neustart";return setTimeout(()=>flightSimReal(),650)}
+ if(mission===0&&world.position.z>3){mission=1;msg.textContent="☁️ Abgehoben – fliege über Stadt, Küste und Inseln"}if(mission===1&&world.position.z>145){mission=2;msg.textContent="🌊 Küstenflug – kleiner Insel-Flugplatz voraus"}if(mission===2&&world.position.z>245){mission=3;msg.textContent="🛬 Missionsziel: lande am kleinen Insel-Flugplatz"}if(mission===3&&world.position.z>330)msg.textContent=gear&&flaps&&power<42?"🛬 Landeanflug erkannt":"⚠️ Für die Landung: Fahrwerk + Klappen, Leistung reduzieren";
+ updateGLBVisibility(world,plane);hud.innerHTML="ALT "+Math.round(alt)+" m<br>SPEED "+Math.round(speed)+" km/h<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°<br>THR "+power+"%<br>"+(gear?"GEAR DOWN":"GEAR UP")+"<br>MISSION "+(mission+1)+"/4";const target=new THREE.Vector3(plane.position.x*.55,plane.position.y+3.1,plane.position.z+10);g.camera.position.lerp(target,.10);g.camera.lookAt(plane.position.x,plane.position.y+.15,plane.position.z-2);g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
  loadAircraft();loop(performance.now());
 }
 ;window.flightSim=flightSimReal;
 
 
-// REAL GLB AIRLINER MODELS
 let gltfLoaderPromise=null;
 
 // GLB memory/performance manager.
