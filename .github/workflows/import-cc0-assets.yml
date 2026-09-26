@@ -14,30 +14,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download GLB assets
+      - name: Download local GLB assets
         shell: bash
         run: |
           set -e
           mkdir -p assets/imported assets/environment
           download() { curl -L --fail --retry 3 --retry-delay 2 "$1" -o "$2"; }
+
+          # Aircraft models already used by the simulator
           download "https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/A380_nologo.glb" "assets/imported/A380_nologo.glb"
           download "https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/B787_nologo.glb" "assets/imported/B787_nologo.glb"
           download "https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/EVTOL_nologo.glb" "assets/imported/EVTOL_nologo.glb"
           download "https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/drone_nologo.glb" "assets/imported/drone_nologo.glb"
-          base="https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit"
-          download "$base/Building_01_Art.glb" "assets/environment/Building_01.glb"
-          download "$base/Building_02_Art.glb" "assets/environment/Building_02.glb"
-          download "$base/Building_03_Art.glb" "assets/environment/Building_03.glb"
-          download "$base/Building_04_Art.glb" "assets/environment/Building_04.glb"
-          download "$base/Building_05_Art.glb" "assets/environment/Building_05.glb"
-          download "$base/Building_06_Art.glb" "assets/environment/Building_06.glb"
-          download "$base/Building_07_Art.glb" "assets/environment/Building_07.glb"
-          download "$base/Building_08_Art.glb" "assets/environment/Building_08.glb"
-          download "$base/Building_09_Art.glb" "assets/environment/Building_09.glb"
-          download "$base/Car_01_Art.glb" "assets/environment/Car_01.glb"
-          download "$base/Car_02_Art.glb" "assets/environment/Car_02.glb"
-          download "$base/Container_01_Art.glb" "assets/environment/Container_01.glb"
-          download "$base/Crate_01_Art.glb" "assets/environment/Crate_01.glb"
+
+          # Quaternius CC0 models, bundled by skyline-run with license information
+          base="https://raw.githubusercontent.com/anshaneja5/skyline-run/main/public/assets/models"
+          download "$base/b_large.glb" "assets/environment/Building_Large.glb"
+          download "$base/b_medium.glb" "assets/environment/Building_Medium.glb"
+          download "$base/b_small.glb" "assets/environment/Building_Small.glb"
+          download "$base/bush.glb" "assets/environment/Bush.glb"
+          download "$base/tree1.glb" "assets/environment/Tree_Quaternius_1.glb"
+          download "$base/tree2.glb" "assets/environment/Tree_Quaternius_2.glb"
+          download "$base/tree3.glb" "assets/environment/Tree_Quaternius_3.glb"
+          download "$base/plane.glb" "assets/environment/SmallPlane.glb"
+          download "$base/prop_ac.glb" "assets/environment/ACUnit.glb"
 
       - name: Commit imported models
         shell: bash
@@ -49,5 +49,5 @@ jobs:
             echo "No new assets."
             exit 0
           fi
-          git commit -m "Add local 3D GLB assets"
+          git commit -m "Add local CC0 aircraft and scenery models"
           git push
