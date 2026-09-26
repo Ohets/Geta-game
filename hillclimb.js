@@ -7,7 +7,8 @@ function hillClimb(){
  const car={angle:0,speed:0,bounce:0,air:0,airAngle:0};
  function unlocked(i){return i===0||+localStorage.getItem("geta_hill_level_"+i)===1} 
  function choose(){
-  box.innerHTML='<div class="hillSelect"><h2>🚙 Hill Climb Racing</h2><p>Wähle Fahrzeug und Strecke</p><div class="hillCars">'+vehicles.map((v,i)=>'<button data-v="'+i+'">'+v.name+'<small>'+(i===0?"Ausgeglichen":i===1?"Stabil":"Schnell")+'</small></button>').join("")+'</div><div class="hillLevels">'+levels.map((l,i)=>'<button data-l="'+i+'" '+(!unlocked(i)?'disabled':'')+'>'+l.name+'<small>'+l.goal+' m'+(unlocked(i)?'':' 🔒')+'</small></button>').join("")+'</div></div>';
+  box.innerHTML='<div class="hillSelect"><h2>🏁 GETA HILL CLIMB</h2><p>🚗 Berge · 🌊 Wasser · 🌋 Tunnel</p><button id="hillPlay" style="font-size:20px;padding:12px 30px;margin:8px">▶ PLAY</button><div id="hillSetup" style="display:none"><p>Wähle Fahrzeug und Strecke</p><div class="hillCars">'+vehicles.map((v,i)=>'<button data-v="'+i+'">'+v.name+'<small>'+(i===0?"Ausgeglichen":i===1?"Stabil":"Schnell")+'</small></button>').join("")+'</div><div class="hillLevels">'+levels.map((l,i)=>'<button data-l="'+i+'" '+(!unlocked(i)?'disabled':'')+'>'+l.name+'<small>'+l.goal+' m'+(unlocked(i)?'':' 🔒')+'</small></button>').join("")+'</div></div></div>';
+  box.querySelector("#hillPlay").onpointerdown=()=>{sound("start");const s=box.querySelector("#hillSetup");s.style.display="block";box.querySelector("#hillPlay").style.display="none"};
   box.querySelectorAll("[data-v]").forEach(b=>b.onpointerdown=()=>{vehicle=+b.dataset.v;refresh()});
   box.querySelectorAll("[data-l]").forEach(b=>b.onpointerdown=()=>{level=+b.dataset.l;refresh()});
   function refresh(){box.querySelectorAll("[data-v]").forEach(x=>x.classList.toggle("selected",+x.dataset.v===vehicle));box.querySelectorAll("[data-l]").forEach(x=>x.classList.toggle("selected",+x.dataset.l===level))}
