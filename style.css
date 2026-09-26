@@ -12,3 +12,6 @@ body{margin:0;font-family:system-ui,sans-serif;background:linear-gradient(135deg
 .hillSelect h2{flex:0 0 auto}
 .hillSelect p,.hillCars,.hillLevels,#hillGarage,#hillProgressTop,#hillLevelProgress{flex:0 0 auto}
 @media(max-width:600px){.hillSelect{padding:12px 8px 36px;justify-content:flex-start;touch-action:pan-y}.hillSelect::-webkit-scrollbar{width:6px}.hillSelect::-webkit-scrollbar-thumb{background:#0006;border-radius:8px}}
+
+/* Hill Climb: clearer vehicle selection and visible car */
+.hillSwipeHint{font-size:11px!important;opacity:.7!important;margin:2px 0 6px!important}.hillSetup{width:100%;box-sizing:border-box;overflow:visible}.hillCars button{font-size:12px;min-height:54px}.hillCars button.selected{background:#fff;transform:scale(1.03);box-shadow:0 4px 12px #0004}@media(max-width:600px){.hillCars{gap:6px}.hillCars button{min-width:78px;min-height:56px;padding:7px 8px}.hillSwipeHint{font-size:10px!important}}
