@@ -336,9 +336,7 @@ function loadRealGLB(url,group,done){
   // Clone the parsed model instead of parsing/downloading the same GLB again.
   const instance=model.clone(true);
   optimizeGLBModel(instance,{castShadow:false});
-  // The aircraft GLBs use the opposite forward axis from the simulator world.
-  // Rotate the model 180° so the nose points in the direction of flight.
-  if(/A320|A350|B737|A380|B787|EVTOL|drone/i.test(url)) instance.rotation.x=Math.PI; instance.rotation.y=0; instance.rotation.z=0;
+  // The GLB aircraft already contains its own orientation quaternion.\n  // Its local aircraft axis is transformed by the GLB node, so do not add\n  // an extra Euler rotation here; doing so flips the nose away from flight direction.\n  if(/A320|A350|B737|A380|B787|EVTOL|drone/i.test(url)) instance.rotation.set(0,0,0);
   group.add(instance);
 
   // Distance-based rendering: objects far behind the aircraft are skipped.
