@@ -336,7 +336,9 @@ function loadRealGLB(url,group,done){
   // Clone the parsed model instead of parsing/downloading the same GLB again.
   const instance=model.clone(true);
   optimizeGLBModel(instance,{castShadow:false});
-  // Local GLB correction: rotate the aircraft 90° around the Y axis.\n  // This changes only the model orientation, not the flight controls.\n  if(/A320|A350|B737|A380|B787|EVTOL|drone/i.test(url)) instance.rotation.set(0,0,0);
+  // Keep the GLB's own root transform. These aircraft files contain their
+  // correct coordinate-system rotation; overwriting instance.rotation would
+  // destroy that built-in orientation and make the nose point sideways.
   group.add(instance);
 
   // Distance-based rendering: objects far behind the aircraft are skipped.
