@@ -124,7 +124,39 @@ function flightSimReal(){
  viewBar.innerHTML='<button data-view="cockpit">🛫 Cockpit</button><button data-view="external">🌍 Außen</button><button data-view="wing">🪽 Flügel</button><button data-view="cabin">💺 Kabine</button>';b.appendChild(viewBar);
  const cockpitHud=document.createElement("div");cockpitHud.style.cssText="position:absolute;inset:0;pointer-events:none;z-index:18;display:none;color:#d9f5ff;font-family:monospace";
  cockpitHud.innerHTML='<div style="position:absolute;left:8%;bottom:12%;width:84%;height:26%;border:2px solid rgba(180,220,230,.45);background:rgba(10,18,24,.55);border-radius:8px"></div><div style="position:absolute;left:12%;bottom:17%;font-size:13px">PFD &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ND</div><div style="position:absolute;left:15%;bottom:22%;font-size:22px">▣ ALT <span id="cpAlt">120</span>m</div><div style="position:absolute;left:55%;bottom:22%;font-size:22px">HDG <span id="cpHdg">000</span>°</div><div style="position:absolute;left:42%;bottom:7%;font-size:14px">A320 COCKPIT</div>';b.appendChild(cockpitHud);
- function makeA320Cockpit(){const cg=new THREE.Group(),dark=mat(0x172027),panel=mat(0x30383b),screen=mat(0x10252b),amber=mat(0xd7a84b);const dash=cube([8,1.1,1.5],panel);dash.position.set(0,1.1,-1.2);cg.add(dash);for(let x=-3;x<=3;x+=2){const s=cube([1.45,.85,.08],screen);s.position.set(x,1.35,-1.98);cg.add(s)}const center=cube([1.7,.65,.9],dark);center.position.set(0,.7,-1.75);cg.add(center);for(let x=-2.8;x<=2.8;x+=1.4){const k=cube([.5,.35,.35],amber);k.position.set(x,.62,-1.7);cg.add(k)}const yoke=cube([.12,1,.12],dark);yoke.position.set(0,.25,-1.55);yoke.rotation.z=.15;cg.add(yoke);const roof=cube([8,2,.4],dark);roof.position.set(0,2.9,-.7);cg.add(roof);const post=cube([.25,4,.25],dark);post.position.set(0,1.3,-.25);cg.add(post);return cg}
+ function makeA320Cockpit(){
+ const cg=new THREE.Group();
+ const dark=mat(0x141b1e),panel=mat(0x343b3e),screen=mat(0x07151b),amber=mat(0xd7a84b),white=mat(0xd9e0df);
+ const dash=cube([8.2,1.15,1.25],panel);dash.position.set(0,1.15,-1.35);cg.add(dash);
+ // Two PFD/ND pairs plus center ECAM, in a simplified A320-inspired layout.
+ [-3.0,-1.0,1.0,3.0].forEach((x,i)=>{
+  const s=cube([1.65,.9,.09],screen);s.position.set(x,1.45,-2.03);cg.add(s);
+  const frame=cube([1.82,1.06,.06],dark);frame.position.set(x,1.45,-2.08);cg.add(frame);
+ });
+ [0].forEach(x=>{const e=cube([1.65,.9,.08],screen);e.position.set(0,1.42,-2.12);cg.add(e)});
+ // glareshield
+ const glare=cube([8.3,.28,1.0],dark);glare.position.set(0,1.88,-1.65);glare.rotation.x=-.12;cg.add(glare);
+ // windshield pillars
+ [-3.9,0,3.9].forEach(x=>{const p=cube([.18,3.2,.18],dark);p.position.set(x,2.65,-.35);p.rotation.z=x===0?0:(x<0?-.035:.035);cg.add(p)});
+ // center pedestal
+ const pedestal=cube([2.6,.65,2.2],dark);pedestal.position.set(0,.72,-.35);pedestal.rotation.x=-.08;cg.add(pedestal);
+ // dual thrust levers
+ [-.38,.38].forEach(x=>{const base=cube([.24,.18,.85],panel);base.position.set(x,1.02,-.42);base.rotation.x=-.18;cg.add(base);
+  const handle=cube([.28,.5,.18],amber);handle.position.set(x,1.32,-.58);handle.rotation.x=-.18;cg.add(handle)});
+ // speed brake + flap levers
+ [-.78,.78].forEach(x=>{const l=cube([.12,.42,.12],white);l.position.set(x,.98,.05);l.rotation.x=-.35;cg.add(l)});
+ // Airbus-style sidesticks
+ [-2.9,2.9].forEach(x=>{const stem=cube([.14,.62,.14],dark);stem.position.set(x,.62,-.05);stem.rotation.z=x<0?-.12:.12;cg.add(stem);
+  const grip=cube([.28,.38,.28],panel);grip.position.set(x,.95,-.18);cg.add(grip);
+  for(let j=0;j<3;j++){const btn=cube([.08,.08,.08],amber);btn.position.set(x+(x<0?.08:-.08),1.0-j*.10,-.34);cg.add(btn)}});
+ // overhead panel
+ const overhead=cube([7.0,1.0,.55],dark);overhead.position.set(0,3.35,-.55);overhead.rotation.x=.15;cg.add(overhead);
+ for(let r=0;r<2;r++)for(let i=0;i<14;i++){const sw=cube([.25,.12,.08],i%3===0?amber:panel);sw.position.set(-3.1+i*.48,3.48+r*.22,-.82);cg.add(sw)}
+ // rear console details / seats
+ [-3.2,3.2].forEach(x=>{const seat=cube([1.5,1.8,.8],dark);seat.position.set(x,-.05,.9);cg.add(seat)});
+ cg.userData.instrumentMeshes={};
+ return cg;
+}
  viewBar.querySelectorAll("button").forEach(q=>q.onclick=()=>{viewMode=q.dataset.view;cockpitHud.style.display=viewMode==="cockpit"?"block":"none"});
  const msg=document.createElement("div");msg.className="flightMessage";msg.textContent="🛫 Hauptflughafen – starte über die lange Startbahn";b.appendChild(msg);
  const hud=document.createElement("div");hud.className="flightHud";b.appendChild(hud);
