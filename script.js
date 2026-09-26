@@ -171,14 +171,37 @@ function flightSimReal(){
 }
  viewBar.querySelectorAll("button").forEach(q=>q.onclick=()=>{viewMode=q.dataset.view;cockpitHud.style.display=viewMode==="cockpit"?"block":"none"});
  function bindCockpitControls(){
-  if(!cockpitGroup||selected!=="A320")return;
+  if(!cockpitGroup||selected!=="A320"||cockpitGroup.userData.bound)return;
+  cockpitGroup.userData.bound=true;
   const c=cockpitGroup.userData.controls||{};
-  if(c.throttle0&&!c.throttle0.userData.bound){
-   const drag=(ev,dir)=>{ev.preventDefault();const dy=ev.movementY||0;throttle.value=Math.max(0,Math.min(100,+throttle.value-dy*.35*dir));};
-   [c.throttle0,c.throttle1].forEach(h=>{h.userData.bound=true;h.userData.onpointermove=ev=>{if(h.userData.dragging)drag(ev,1)};h.userData.onpointerdown=ev=>{h.userData.dragging=true;h.setPointerCapture&&h.setPointerCapture(ev.pointerId)};h.userData.onpointerup=()=>h.userData.dragging=false;});
-   if(c.flaps)c.flaps.userData.bound=true;
+  const toggleFlaps=()=>{flaps=!flaps;msg.textContent=flaps?"🪽 Cockpit: Klappen ausgefahren":"🪽 Cockpit: Klappen eingefahren"};
+  const toggleGear=()=>{gear=!gear;msg.textContent=gear?"🛬 Cockpit: Fahrwerk ausgefahren":"🛫 Cockpit: Fahrwerk eingefahren"};
+  const toggleBrake=()=>{brake=true;msg.textContent="🛑 Cockpit: Bremse";setTimeout(()=>brake=false,700)};
+  if(c.throttle0){
+   [c.throttle0,c.throttle1].forEach(h=>{
+    h.userData.bound=true;
+    h.userData.dragging=false;
+    h.addEventListener("pointerdown",ev=>{ev.preventDefault();h.userData.dragging=true;h.setPointerCapture&&h.setPointerCapture(ev.pointerId)});
+    h.addEventListener("pointermove",ev=>{if(!h.userData.dragging)return;const dy=ev.movementY||0;throttle.value=Math.max(0,Math.min(100,+throttle.value-dy*.45));});
+    h.addEventListener("pointerup",()=>h.userData.dragging=false);
+    h.addEventListener("pointercancel",()=>h.userData.dragging=false);
+   });
   }
- }
+  if(c.flaps){c.flaps.userData.bound=true;c.flaps.addEventListener("pointerdown",ev=>{ev.preventDefault();toggleFlaps()});}
+  if(c.speedbrake){c.speedbrake.userData.bound=true;c.speedbrake.addEventListener("pointerdown",ev=>{ev.preventDefault();toggleBrake()});}
+  if(c.sidestick){
+   c.sidestick.userData.bound=true;
+   c.sidestick.addEventListener("pointerdown",ev=>{ev.preventDefault();c.sidestick.userData.dragging=true;c.sidestick.setPointerCapture&&c.sidestick.setPointerCapture(ev.pointerId)});
+   c.sidestick.addEventListener("pointermove",ev=>{
+    if(!c.sidestick.userData.dragging)return;
+    const dx=ev.movementX||0,dy=ev.movementY||0;
+    px=Math.max(-5.5,Math.min(5.5,px+dx*.035));
+    pitch=Math.max(-12,Math.min(12,pitch-dy*.12));
+   });
+   c.sidestick.addEventListener("pointerup",()=>c.sidestick.userData.dragging=false);
+   c.sidestick.addEventListener("pointercancel",()=>c.sidestick.userData.dragging=false);
+  }
+}
  const msg=document.createElement("div");msg.className="flightMessage";msg.textContent="🛫 Hauptflughafen – starte über die lange Startbahn";b.appendChild(msg);
  const hud=document.createElement("div");hud.className="flightHud";b.appendChild(hud);
  const select=document.createElement("select");select.innerHTML='<option value="A320">✈️ A320</option><option value="A350">✈️ A350</option><option value="B737">✈️ B737</option><option value="A380">✈️ A380</option><option value="B787">✈️ B787</option><option value="EVTOL">🚁 EVTOL</option><option value="Drone">🚁 Drone</option>';select.style.cssText="position:absolute;right:8px;top:42px;z-index:20;padding:5px";b.appendChild(select);
