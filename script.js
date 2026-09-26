@@ -243,7 +243,7 @@ const cockpitStatus=document.createElement("div");cockpitStatus.style.cssText="p
  plane.position.y=py;
  plane.rotation.z=-bank*.045;
  plane.rotation.x=pitchRad;
- plane.rotation.y=heading*Math.PI/180;
+ plane.rotation.y=heading*Math.PI/180+Math.PI/2;
  traffic.forEach((t,i)=>{t.position.z+=(.018+i*.002)*dt;if(t.position.z>20)t.position.z=-300-i*22});
  if(alt<=0.1&&speed<55){verticalSpeed=0;pitch=Math.max(0,pitch*.95)}
  if(alt<=0.1&&speed>175){alive=false;msg.textContent="💥 Zu schnelle Bodenberührung – Neustart";return setTimeout(()=>flightSimReal(),900)}
