@@ -124,6 +124,59 @@ function flightSimReal(){
  for(let row=0;row<6;row++)for(let col=0;col<7;col++){const x=-54+col*18+(row%2)*5,z=-95-row*22;if(Math.abs(x)<12)continue;const h=new THREE.Group();h.position.set(x,-2,z);h.scale.setScalar(1.25+(row%3)*.12);world.add(h);loadRealGLB(bu[(row*7+col)%3],h,()=>{})}
  const harbour=cube([48,.08,30],0x4d5960);harbour.position.set(73,-2.08,-225);world.add(harbour);for(let i=0;i<5;i++){const d=cube([5,.12,26],0x775a3e);d.position.set(48+i*12,-1.96,-225);world.add(d)}
  const bridge=cube([9,.4,58],0x696969);bridge.position.set(0,-1.85,-250);world.add(bridge);
+ // Expanded island-airport scenery: coastal towns, farms, roads, piers, boats and mountains.
+ function boxObj(x,y,z,sx,sy,sz,color,rot=0){const o=cube([sx,sy,sz],color);o.position.set(x,y,z);o.rotation.y=rot;world.add(o);return o}
+ function house(x,z,s=1,rot=0){
+   boxObj(x,-1.35,z,5*s,2.2*s,4*s,0xb8b09a,rot);
+   const roof= new THREE.Mesh(new THREE.ConeGeometry(3.6*s,1.8*s,4),mat(0x8a4d38)); roof.position.set(x,-.1,z); roof.rotation.y=Math.PI/4+rot; world.add(roof);
+   boxObj(x,-.45,z-(2.05*s),1.0*s,1.15*s,.08*s,0x4b7890,rot);
+ }
+ function farm(x,z,s=1){
+   boxObj(x,-1.55,z,22*s,.12*s,16*s,0x718d3f);
+   for(let k=-7;k<=7;k+=3) boxObj(x+k*s,-1.45,z,1.0*s,.08*s,15*s,0x5e7936);
+   boxObj(x+13*s,-.8,z,5*s,1.8*s,6*s,0xa45f38);
+ }
+ function street(x,z,len,rot=0){
+   boxObj(x,-2.02,z,4.2,len,.06,0x424242,rot);
+   for(let p=-len*.38;p<len*.38;p+=7) boxObj(x,-1.98,z+p,.12,3.2,.025,0xd8c98a,rot);
+ }
+ // Main island town grid
+ street(-48,-150,105,.03); street(48,-160,120,-.025);
+ street(-2,-150,115,Math.PI/2);
+ for(let r=0;r<4;r++)for(let q=0;q<5;q++){
+   const x=-62+q*30+(r%2)*4, z=-115-r*25;
+   if(Math.abs(x)<15) continue;
+   house(x,z,0.62+(q%2)*.12,(q%2)*.08);
+ }
+ // Suburban strip near the coast
+ for(let i=0;i<10;i++) house(-100+i*10,-205-(i%2)*10,.55,i%2?.18:-.12);
+ // farmland on the eastern side
+ farm(82,-150,.9); farm(88,-190,.75); farm(-88,-175,.8);
+ // second small settlement by the island airfield
+ for(let i=0;i<7;i++) house(-118+(i%4)*9,-145-Math.floor(i/4)*10,.48,i%2?.15:0);
+ // runway approach lights
+ for(let z=-83;z<=-38;z+=7){boxObj(-6.2,-1.98,z,.12,.12,.12,0xf4df75);boxObj(6.2,-1.98,z,.12,.12,.12,0xf4df75)}
+ // coastal piers and simple boats
+ for(let i=0;i<4;i++){
+   const px=76+i*7; boxObj(px,-1.98,-244,3.2,.12,24,0x7b6249);
+   const boat=boxObj(px,-1.65,-250,2.2,.35,7,0xe8e8e8);
+   boxObj(px,-1.35,-251,1.0,1.0,.25,0x3b5566);
+ }
+ // mountain chain and a prominent peak
+ for(let i=0;i<13;i++){
+   const mx=-135+i*22, mz=-270-(i%4)*18;
+   const mh=18+(i%5)*7, mw=15+(i%3)*6;
+   const m=new THREE.Mesh(new THREE.ConeGeometry(mw,mh,9),mat(i%3===0?0x566d57:0x627b59));
+   m.position.set(mx,-2.1+mh/2,mz); world.add(m);
+ }
+ const peak=new THREE.Mesh(new THREE.ConeGeometry(28,55,12),mat(0x536b55));peak.position.set(-22,25,-335);world.add(peak);
+ // cloud groups for depth
+ function cloud(x,y,z,s=1){
+   const cg=new THREE.Group();
+   for(let j=0;j<5;j++){const p=sphere((1.8+(j%3)*.8)*s,0xf4f7f8,.75);p.position.set((j-2)*2.2*s,(j%2)*.55*s,((j%3)-1)*.7*s);cg.add(p)}
+   cg.position.set(x,y,z);world.add(cg);
+ }
+ [[-85,22,-85,1.2],[70,28,-145,1.4],[-25,25,-220,1.0],[125,24,-270,1.5],[-130,30,-300,1.3]].forEach(a=>cloud(...a));
  const props=[["assets/environment/Tree_Quaternius_1.glb",-70,-2,-120,1.5],["assets/environment/Tree_Quaternius_2.glb",70,-2,-145,1.5],["assets/environment/Tree_Quaternius_3.glb",-72,-2,-180,1.5],["assets/environment/Bush.glb",72,-2,-190,1.7],["assets/environment/Rock_01.glb",-58,-2,-228,1.2],["assets/environment/Rock_02.glb",58,-2,-238,1.2],["assets/environment/Bench_01.glb",-12,-2,-72,1.1],["assets/environment/Fence_01.glb",12,-2,-72,1]];
  props.forEach(a=>{const h=new THREE.Group();h.position.set(a[1],a[2],a[3]);h.scale.setScalar(a[4]);world.add(h);loadRealGLB(a[0],h,()=>{})});
  const urls={A320:"assets/A320_nologo.glb",A350:"assets/A350_nologo.glb",B737:"assets/B737_nologo.glb",A380:"assets/imported/A380_nologo.glb",B787:"assets/imported/B787_nologo.glb",EVTOL:"assets/imported/EVTOL_nologo.glb",Drone:"assets/imported/drone_nologo.glb"};
