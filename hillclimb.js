@@ -39,7 +39,7 @@ function drawFarMountains(t){
  for(let layer=0;layer<3;layer++){
   const par=.025+layer*.035;ctx.fillStyle=layer===0?"#8ab0c2":layer===1?"#7195a5":"#587b89";
   ctx.beginPath();ctx.moveTo(0,base+70);
-  for(let x=-80;x<=W+120;x+=80){const px=x-(world*par%160);const peak=base-70-layer*18-35*Math.sin((x+i*0.01)*.015);ctx.lineTo(x,peak);ctx.lineTo(x+45,base+70)}
+  for(let x=-80;x<=W+120;x+=80){const px=x-(world*par%160);const peak=base-70-layer*18-35*Math.sin(x*.015+layer);ctx.lineTo(x,peak);ctx.lineTo(x+45,base+70)}
   ctx.lineTo(W,base+90);ctx.lineTo(0,base+90);ctx.fill();
  }ctx.restore();
 }
