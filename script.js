@@ -178,14 +178,48 @@ function flightSimReal(){
  let selected="A320",px=0,py=.25,heading=0,alt=120,speed=0,verticalSpeed=0,bank=0,pitch=0,yawInput=0,last=performance.now(),alive=true,gear=true,flaps=false,brake=false,mission=0,fuel=100,paused=false,cameraDistance=10;
  function loadAircraft(){plane.clear();msg.textContent="🛫 "+selected+" wird geladen …";loadRealGLB(urls[selected],plane,ok=>{msg.textContent=ok?"🟢 "+selected+" – Welt geladen":"🔴 Flugzeugmodell konnte nicht geladen werden"})}
  select.onchange=()=>{selected=select.value;loadAircraft()};weather.onchange=()=>{const v=weather.value;if(v==="night"){g.scene.background.set(0x071326);g.scene.fog.color.set(0x071326)}else if(v==="rain"){g.scene.background.set(0x6d7884);g.scene.fog.color.set(0x6d7884)}else{g.scene.background.set(0x79bfe8);g.scene.fog.color.set(0x79bfe8)}};
- function steer(dx,dy){px=Math.max(-5.5,Math.min(5.5,px+dx));py=Math.max(-1.7,Math.min(7,py+dy))}function yaw(v){yawInput=Math.max(-1,Math.min(1,yawInput+v))}
+ function steer(dx,dy){px=Math.max(-5.5,Math.min(5.5,px+dx));pitch=Math.max(-12,Math.min(12,pitch+dy*7))}function yaw(v){yawInput=Math.max(-1,Math.min(1,yawInput+v))}
  controls.querySelector('[data-fs="left"]').onpointerdown=()=>steer(-.45,0);controls.querySelector('[data-fs="right"]').onpointerdown=()=>steer(.45,0);controls.querySelector('[data-fs="up"]').onpointerdown=()=>steer(0,.3);controls.querySelector('[data-fs="down"]').onpointerdown=()=>steer(0,-.3);controls.querySelector('[data-fs="yawL"]').onpointerdown=()=>yaw(-.35);controls.querySelector('[data-fs="yawR"]').onpointerdown=()=>yaw(.35);
  document.onkeydown=e=>{if(e.key==="ArrowLeft")steer(-.3,0);if(e.key==="ArrowRight")steer(.3,0);if(e.key==="ArrowUp")steer(0,.2);if(e.key==="ArrowDown")steer(0,-.2);if(e.key==="a"||e.key==="A")yawInput=Math.max(-1,yawInput-.25);if(e.key==="d"||e.key==="D")yawInput=Math.min(1,yawInput+.25);if(e.key==="w"||e.key==="W")throttle.value=Math.min(100,+throttle.value+5);if(e.key==="s"||e.key==="S")throttle.value=Math.max(0,+throttle.value-5);if(e.key==="p"||e.key==="P"){paused=!paused;msg.textContent=paused?"⏸️ Pause":"▶️ Flug fortgesetzt"}};
  extras.querySelector('[data-x="gear"]').onclick=()=>{gear=!gear;msg.textContent=gear?"🛬 Fahrwerk ausgefahren":"🛫 Fahrwerk eingefahren"};extras.querySelector('[data-x="flaps"]').onclick=()=>{flaps=!flaps;msg.textContent=flaps?"🪽 Klappen ausgefahren":"🪽 Klappen eingefahren"};extras.querySelector('[data-x="brake"]').onclick=()=>{brake=true;setTimeout(()=>brake=false,900)};extras.querySelector('[data-x="pause"]').onclick=()=>{paused=!paused;msg.textContent=paused?"⏸️ Pause":"▶️ Flug fortgesetzt"};extras.querySelector('[data-x="reset"]').onclick=()=>{alive=false;setTimeout(()=>flightSimReal(),0)};
- function loop(now){if(!alive)return;const dt=Math.min((now-last)/16,2);last=now;if(paused){activeAnimation=requestAnimationFrame(loop);return}const power=+throttle.value;const stall=Math.max(0,1-Math.max(0,speed-55)/55);const targetSpeed=power*5.2*(brake?.25:1)*(flaps?.88:1);speed+=(targetSpeed-speed)*.035*dt;const lift=Math.max(0,(speed-62)/125)*(flaps?1.12:1);const pitchInput=(py-.25)*.18;verticalSpeed+=(lift*7.5-pitchInput*10-verticalSpeed)*.035*dt;alt=Math.max(0,alt+verticalSpeed*dt);const forward=.0025+speed*.000025;world.position.z+=forward*dt;bank+=(px*5-bank)*.08*dt;heading=(heading+(bank*.018+yawInput*.9)*dt+360)%360;px*=.985;py+=(.25-py)*.002*dt;yawInput*=.92;fuel=Math.max(0,fuel-power*.0007*dt);plane.position.x=px;plane.position.y=py;plane.rotation.z=-bank*.045;plane.rotation.x=-Math.max(-18,Math.min(18,verticalSpeed*.12))*Math.PI/180;traffic.forEach((t,i)=>{t.position.z+=(.018+i*.002)*dt;if(t.position.z>20)t.position.z=-300-i*22});
- if(py<-1.7){alive=false;msg.textContent="💥 Bodenberührung – Neustart";return setTimeout(()=>flightSimReal(),650)}
- if(mission===0&&world.position.z>3){mission=1;msg.textContent="☁️ Abgehoben – fliege über Stadt, Küste und Inseln"}if(mission===1&&world.position.z>145){mission=2;msg.textContent="🌊 Küstenflug – kleiner Insel-Flugplatz voraus"}if(mission===2&&world.position.z>245){mission=3;msg.textContent="🛬 Missionsziel: lande am kleinen Insel-Flugplatz"}if(mission===3&&world.position.z>330){const landingReady=gear&&flaps&&power<42&&speed>45&&speed<230&&Math.abs(px)<3.5&&alt<260;if(landingReady)msg.textContent="🛬 Landeanflug – halte die Bahnmitte und reduziere weiter";else msg.textContent="⚠️ Landung: Fahrwerk + Klappen, 45–230 km/h, Bahnmitte, niedrige Höhe";if(landingReady&&alt<80&&Math.abs(verticalSpeed)<3&&Math.abs(px)<2.5&&speed<155){mission=4;msg.textContent="🏆 Sichere Landung! Insel-Flugplatz erreicht";}}
- updateGLBVisibility(world,plane);hud.innerHTML="ALT "+Math.round(alt)+" m<br>SPEED "+Math.round(speed)+" km/h<br>VS "+(verticalSpeed>=0?"+":"")+Math.round(verticalSpeed*10)+" m/s<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°<br>THR "+power+"%<br>FUEL "+Math.round(fuel)+"%<br>"+(gear?"GEAR DOWN":"GEAR UP")+"<br>"+(flaps?"FLAPS":"CLEAN")+"<br>"+(mission===4?"LANDED":"MISSION "+(mission+1)+"/4")+"<br>"+(speed<62&&power>55?"STALL":"");let target,look;if(viewMode==="cockpit"){if(!cockpitGroup){cockpitGroup=makeA320Cockpit();plane.add(cockpitGroup)}cockpitGroup.visible=selected==="A320";target=new THREE.Vector3(plane.position.x,plane.position.y+1.45,plane.position.z-1);look=new THREE.Vector3(plane.position.x,plane.position.y+1.45,plane.position.z-35)}else if(viewMode==="wing"){target=new THREE.Vector3(plane.position.x+5,plane.position.y+2,plane.position.z+4);look=new THREE.Vector3(plane.position.x,plane.position.y,plane.position.z-25)}else if(viewMode==="cabin"){target=new THREE.Vector3(plane.position.x,plane.position.y+1.3,plane.position.z+2);look=new THREE.Vector3(plane.position.x,plane.position.y+1.4,plane.position.z-25)}else{target=new THREE.Vector3(plane.position.x*.55,plane.position.y+3.1,plane.position.z+cameraDistance);look=new THREE.Vector3(plane.position.x,plane.position.y+.15,plane.position.z-6)}g.camera.position.lerp(target,.10);g.camera.lookAt(look);g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
+ function loop(now){if(!alive)return;const dt=Math.min((now-last)/16,2);last=now;if(paused){activeAnimation=requestAnimationFrame(loop);return}const power=+throttle.value;
+ const ground=alt<=0.5;
+ const rotationSpeed=145,stallSpeed=105,landingSpeed=145;
+ const targetSpeed=power*5.2*(brake?.22:1)*(flaps?.88:1);
+ speed+=(targetSpeed-speed)*.035*dt;
+ const pitchRad=pitch*Math.PI/180;
+ const liftFactor=Math.max(0,(speed-stallSpeed)/115)*(flaps?1.18:1);
+ const aerodynamicLift=liftFactor*Math.cos(pitchRad);
+ const pitchRate=(aerodynamicLift*8.5-2.2-(pitch*.055)-verticalSpeed*.32);
+ verticalSpeed+=pitchRate*.035*dt;
+ if(ground){
+   verticalSpeed=Math.max(0,verticalSpeed);
+   if(speed<rotationSpeed||pitch<2) verticalSpeed=0;
+   else verticalSpeed=Math.min(verticalSpeed,.75);
+   if(speed<rotationSpeed) pitch*=.985;
+ }
+ if(speed<stallSpeed&&alt>3) verticalSpeed-=.035*dt;
+ alt=Math.max(0,alt+verticalSpeed*dt);
+ const forward=.0025+speed*.000025;
+ world.position.z+=forward*dt;
+ bank+=(px*5-bank)*.08*dt;
+ heading=(heading+(bank*.018+yawInput*.9)*dt+360)%360;
+ px*=.985;
+ pitch*=.992;
+ yawInput*=.92;
+ fuel=Math.max(0,fuel-power*.0007*dt);
+ plane.position.x=px;
+ plane.position.y=py;
+ plane.rotation.z=-bank*.045;
+ plane.rotation.x=pitchRad;
+ plane.rotation.y=heading*Math.PI/180;
+ traffic.forEach((t,i)=>{t.position.z+=(.018+i*.002)*dt;if(t.position.z>20)t.position.z=-300-i*22});
+ if(alt<=0.1&&speed<55){verticalSpeed=0;pitch=Math.max(0,pitch*.95)}
+ if(alt<=0.1&&speed>175){alive=false;msg.textContent="💥 Zu schnelle Bodenberührung – Neustart";return setTimeout(()=>flightSimReal(),900)}
+ if(speed<75&&power>70&&alt>15){msg.textContent="⚠️ STALL – Nase senken und Leistung erhöhen"}
+ if(ground&&speed>rotationSpeed&&pitch>=2&&mission===0)msg.textContent="🛫 Rotation – Nase anheben";
+ if(mission===0&&alt>3&&speed>rotationSpeed){mission=1;msg.textContent="☁️ Abgehoben – fliege über Stadt, Küste und Inseln"}if(mission===1&&world.position.z>145){mission=2;msg.textContent="🌊 Küstenflug – kleiner Insel-Flugplatz voraus"}if(mission===2&&world.position.z>245){mission=3;msg.textContent="🛬 Missionsziel: lande am kleinen Insel-Flugplatz"}if(mission===3&&world.position.z>330){const landingReady=gear&&flaps&&power<42&&speed>45&&speed<230&&Math.abs(px)<3.5&&alt<260;if(landingReady)msg.textContent="🛬 Landeanflug – halte die Bahnmitte und reduziere weiter";else msg.textContent="⚠️ Landung: Fahrwerk + Klappen, 45–230 km/h, Bahnmitte, niedrige Höhe";if(landingReady&&alt<80&&Math.abs(verticalSpeed)<3&&Math.abs(px)<2.5&&speed<155){mission=4;msg.textContent="🏆 Sichere Landung! Insel-Flugplatz erreicht";}}
+ updateGLBVisibility(world,plane);hud.innerHTML="ALT "+Math.round(alt)+" m<br>SPEED "+Math.round(speed)+" km/h<br>VS "+(verticalSpeed>=0?"+":"")+Math.round(verticalSpeed*10)+" m/s<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°<br>THR "+power+"%<br>FUEL "+Math.round(fuel)+"%<br>"+(gear?"GEAR DOWN":"GEAR UP")+"<br>"+(flaps?"FLAPS":"CLEAN")+"<br>"+(mission===4?"LANDED":"MISSION "+(mission+1)+"/4")+"<br>PITCH "+Math.round(pitch)+"°<br>"+(speed<75&&power>70&&alt>15?"STALL":"");let target,look;if(viewMode==="cockpit"){if(!cockpitGroup){cockpitGroup=makeA320Cockpit();plane.add(cockpitGroup)}cockpitGroup.visible=selected==="A320";target=new THREE.Vector3(plane.position.x,plane.position.y+1.45,plane.position.z-1);look=new THREE.Vector3(plane.position.x,plane.position.y+1.45,plane.position.z-35)}else if(viewMode==="wing"){target=new THREE.Vector3(plane.position.x+5,plane.position.y+2,plane.position.z+4);look=new THREE.Vector3(plane.position.x,plane.position.y,plane.position.z-25)}else if(viewMode==="cabin"){target=new THREE.Vector3(plane.position.x,plane.position.y+1.3,plane.position.z+2);look=new THREE.Vector3(plane.position.x,plane.position.y+1.4,plane.position.z-25)}else{target=new THREE.Vector3(plane.position.x*.55,plane.position.y+3.1,plane.position.z+cameraDistance);look=new THREE.Vector3(plane.position.x,plane.position.y+.15,plane.position.z-6)}g.camera.position.lerp(target,.10);g.camera.lookAt(look);g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
  loadAircraft();loop(performance.now());
 }
 ;window.flightSim=flightSimReal;
