@@ -2,7 +2,8 @@
 const box=document.getElementById("islandBox");if(!box||!window.THREE)return;
 let scene,camera,renderer,clock,raf,started=false,paused=false;
 let health=100,ammo=30,score=0,mission=0,yaw=0,pitch=0,shootCd=0,grenades=3,stamina=100;
-let weapon=0,inVehicle=false,vehicle=null,vehicleSpeed=0,wanted=0,objective=0,missionStep=0;\nlet audioCtx=null,masterGain=null,engineOsc=null,engineGain=null;
+let weapon=0,inVehicle=false,vehicle=null,vehicleSpeed=0,wanted=0,objective=0,missionStep=0;
+let audioCtx=null,masterGain=null,engineOsc=null,engineGain=null;
 const weapons=[
  {name:"Rifle",mag:30,max:30,damage:1,cool:.20},
  {name:"SMG",mag:45,max:45,damage:1,cool:.10},
