@@ -136,6 +136,8 @@ function flightSimReal(){
  cockpitHud.innerHTML='<div style="position:absolute;left:8%;bottom:8%;width:84%;height:28%;border:1px solid rgba(180,220,230,.45);background:rgba(10,18,24,.62);border-radius:8px"></div><div style="position:absolute;left:11%;bottom:28%;font-size:10px">PFD &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ND</div><div style="position:absolute;left:12%;bottom:19%;font-size:13px">ALT <span id="cpAlt">120</span>m</div><div style="position:absolute;left:12%;bottom:12%;font-size:13px">SPD <span id="cpSpeed">0</span> km/h</div><div style="position:absolute;left:51%;bottom:19%;font-size:13px">HDG <span id="cpHdg">000</span>°</div><div style="position:absolute;left:51%;bottom:12%;font-size:13px">VS <span id="cpVs">+0</span> m/s</div><div style="position:absolute;right:12%;bottom:19%;font-size:13px">TRIM <span id="cpTrim">0.0</span>°</div><div style="position:absolute;right:12%;bottom:12%;font-size:13px"><span id="cpAp">MANUAL</span></div><div style="position:absolute;left:42%;bottom:4%;font-size:10px">A320 COCKPIT • FLIGHT DISPLAY</div>';b.appendChild(cockpitHud);
  function makeA320Cockpit(){
  const cg=new THREE.Group();
+ cg.userData.controls={};
+
  const dark=mat(0x141b1e),panel=mat(0x343b3e),screen=mat(0x07151b),amber=mat(0xd7a84b),white=mat(0xd9e0df);
  const dash=cube([8.2,1.15,1.25],panel);dash.position.set(0,1.15,-1.35);cg.add(dash);
  // Two PFD/ND pairs plus center ECAM, in a simplified A320-inspired layout.
@@ -151,13 +153,13 @@ function flightSimReal(){
  // center pedestal
  const pedestal=cube([2.6,.65,2.2],dark);pedestal.position.set(0,.72,-.35);pedestal.rotation.x=-.08;cg.add(pedestal);
  // dual thrust levers
- [-.38,.38].forEach(x=>{const base=cube([.24,.18,.85],panel);base.position.set(x,1.02,-.42);base.rotation.x=-.18;cg.add(base);
-  const handle=cube([.28,.5,.18],amber);handle.position.set(x,1.32,-.58);handle.rotation.x=-.18;cg.add(handle)});
+ [-.38,.38].forEach((x,i)=>{const base=cube([.24,.18,.85],panel);base.position.set(x,1.02,-.42);base.rotation.x=-.18;cg.add(base);
+  const handle=cube([.28,.5,.18],amber);handle.position.set(x,1.32,-.58);handle.rotation.x=-.18;handle.userData.cockpitControl="throttle";handle.userData.throttleIndex=i;cg.add(handle);cg.userData.controls["throttle"+i]=handle});
  // speed brake + flap levers
- [-.78,.78].forEach(x=>{const l=cube([.12,.42,.12],white);l.position.set(x,.98,.05);l.rotation.x=-.35;cg.add(l)});
+ [-.78,.78].forEach((x,i)=>{const l=cube([.12,.42,.12],white);l.position.set(x,.98,.05);l.rotation.x=-.35;l.userData.cockpitControl=i===0?"speedbrake":"flaps";cg.add(l);cg.userData.controls[i===0?"speedbrake":"flaps"]=l});
  // Airbus-style sidesticks
  [-2.9,2.9].forEach(x=>{const stem=cube([.14,.62,.14],dark);stem.position.set(x,.62,-.05);stem.rotation.z=x<0?-.12:.12;cg.add(stem);
-  const grip=cube([.28,.38,.28],panel);grip.position.set(x,.95,-.18);cg.add(grip);
+  const grip=cube([.28,.38,.28],panel);grip.position.set(x,.95,-.18);grip.userData.cockpitControl="sidestick";cg.add(grip);if(x<0)cg.userData.controls.sidestick=grip;
   for(let j=0;j<3;j++){const btn=cube([.08,.08,.08],amber);btn.position.set(x+(x<0?.08:-.08),1.0-j*.10,-.34);cg.add(btn)}});
  // overhead panel
  const overhead=cube([7.0,1.0,.55],dark);overhead.position.set(0,3.35,-.55);overhead.rotation.x=.15;cg.add(overhead);
@@ -168,6 +170,15 @@ function flightSimReal(){
  return cg;
 }
  viewBar.querySelectorAll("button").forEach(q=>q.onclick=()=>{viewMode=q.dataset.view;cockpitHud.style.display=viewMode==="cockpit"?"block":"none"});
+ function bindCockpitControls(){
+  if(!cockpitGroup||selected!=="A320")return;
+  const c=cockpitGroup.userData.controls||{};
+  if(c.throttle0&&!c.throttle0.userData.bound){
+   const drag=(ev,dir)=>{ev.preventDefault();const dy=ev.movementY||0;throttle.value=Math.max(0,Math.min(100,+throttle.value-dy*.35*dir));};
+   [c.throttle0,c.throttle1].forEach(h=>{h.userData.bound=true;h.userData.onpointermove=ev=>{if(h.userData.dragging)drag(ev,1)};h.userData.onpointerdown=ev=>{h.userData.dragging=true;h.setPointerCapture&&h.setPointerCapture(ev.pointerId)};h.userData.onpointerup=()=>h.userData.dragging=false;});
+   if(c.flaps)c.flaps.userData.bound=true;
+  }
+ }
  const msg=document.createElement("div");msg.className="flightMessage";msg.textContent="🛫 Hauptflughafen – starte über die lange Startbahn";b.appendChild(msg);
  const hud=document.createElement("div");hud.className="flightHud";b.appendChild(hud);
  const select=document.createElement("select");select.innerHTML='<option value="A320">✈️ A320</option><option value="A350">✈️ A350</option><option value="B737">✈️ B737</option><option value="A380">✈️ A380</option><option value="B787">✈️ B787</option><option value="EVTOL">🚁 EVTOL</option><option value="Drone">🚁 Drone</option>';select.style.cssText="position:absolute;right:8px;top:42px;z-index:20;padding:5px";b.appendChild(select);
@@ -227,7 +238,7 @@ function flightSimReal(){
  if(speed<75&&power>70&&alt>15){msg.textContent="⚠️ STALL – Nase senken und Leistung erhöhen"}
  if(ground&&speed>rotationSpeed&&pitch>=2&&mission===0)msg.textContent="🛫 Rotation – Nase anheben";
  if(mission===0&&alt>3&&speed>rotationSpeed){mission=1;msg.textContent="☁️ Abgehoben – fliege über Stadt, Küste und Inseln"}if(mission===1&&world.position.z>145){mission=2;msg.textContent="🌊 Küstenflug – kleiner Insel-Flugplatz voraus"}if(mission===2&&world.position.z>245){mission=3;msg.textContent="🛬 Missionsziel: lande am kleinen Insel-Flugplatz"}if(mission===3&&world.position.z>330){const landingReady=gear&&flaps&&power<42&&speed>45&&speed<230&&Math.abs(px)<3.5&&alt<260;if(landingReady)msg.textContent="🛬 Landeanflug – halte die Bahnmitte und reduziere weiter";else msg.textContent="⚠️ Landung: Fahrwerk + Klappen, 45–230 km/h, Bahnmitte, niedrige Höhe";if(landingReady&&alt<80&&Math.abs(verticalSpeed)<3&&Math.abs(px)<2.5&&speed<155){mission=4;msg.textContent="🏆 Sichere Landung! Insel-Flugplatz erreicht";}}
- const cpAlt=document.getElementById("cpAlt"),cpSpeed=document.getElementById("cpSpeed"),cpHdg=document.getElementById("cpHdg"),cpVs=document.getElementById("cpVs"),cpTrim=document.getElementById("cpTrim"),cpAp=document.getElementById("cpAp");if(cpAlt){cpAlt.textContent=Math.round(alt);cpSpeed.textContent=Math.round(speed);cpHdg.textContent=String(Math.round(heading)).padStart(3,"0");cpVs.textContent=(verticalSpeed>=0?"+":"")+verticalSpeed.toFixed(1);cpTrim.textContent=trim.toFixed(1);cpAp.textContent=autopilot?"AP • ALT/H DG HOLD":"MANUAL"}updateGLBVisibility(world,plane);hud.innerHTML="ALT "+Math.round(alt)+" m<br>SPEED "+Math.round(speed)+" km/h<br>VS "+(verticalSpeed>=0?"+":"")+Math.round(verticalSpeed*10)+" m/s<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°<br>THR "+power+"%<br>FUEL "+Math.round(fuel)+"%<br>"+(gear?"GEAR DOWN":"GEAR UP")+"<br>"+(flaps?"FLAPS":"CLEAN")+"<br>"+(mission===4?"LANDED":"MISSION "+(mission+1)+"/4")+"<br>PITCH "+Math.round(pitch)+"°<br>TRIM "+trim.toFixed(1)+"°<br>"+(autopilot?"AP ON ":"")+(speed<75&&power>70&&alt>15?"STALL":"");let target,look;if(viewMode==="cockpit"){if(!cockpitGroup){cockpitGroup=makeA320Cockpit();plane.add(cockpitGroup)}cockpitGroup.visible=selected==="A320";target=new THREE.Vector3(plane.position.x,plane.position.y+1.45,plane.position.z-1);look=new THREE.Vector3(plane.position.x,plane.position.y+1.45,plane.position.z-35)}else if(viewMode==="wing"){target=new THREE.Vector3(plane.position.x+5,plane.position.y+2,plane.position.z+4);look=new THREE.Vector3(plane.position.x,plane.position.y,plane.position.z-25)}else if(viewMode==="cabin"){target=new THREE.Vector3(plane.position.x,plane.position.y+1.3,plane.position.z+2);look=new THREE.Vector3(plane.position.x,plane.position.y+1.4,plane.position.z-25)}else{target=new THREE.Vector3(plane.position.x*.55,plane.position.y+3.1,plane.position.z+cameraDistance);look=new THREE.Vector3(plane.position.x,plane.position.y+.15,plane.position.z-6)}g.camera.position.lerp(target,.10);g.camera.lookAt(look);g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
+ const cpAlt=document.getElementById("cpAlt"),cpSpeed=document.getElementById("cpSpeed"),cpHdg=document.getElementById("cpHdg"),cpVs=document.getElementById("cpVs"),cpTrim=document.getElementById("cpTrim"),cpAp=document.getElementById("cpAp");if(cpAlt){cpAlt.textContent=Math.round(alt);cpSpeed.textContent=Math.round(speed);cpHdg.textContent=String(Math.round(heading)).padStart(3,"0");cpVs.textContent=(verticalSpeed>=0?"+":"")+verticalSpeed.toFixed(1);cpTrim.textContent=trim.toFixed(1);cpAp.textContent=autopilot?"AP • ALT/H DG HOLD":"MANUAL"}updateGLBVisibility(world,plane);hud.innerHTML="ALT "+Math.round(alt)+" m<br>SPEED "+Math.round(speed)+" km/h<br>VS "+(verticalSpeed>=0?"+":"")+Math.round(verticalSpeed*10)+" m/s<br>HDG "+String(Math.round(heading)).padStart(3,"0")+"°<br>THR "+power+"%<br>FUEL "+Math.round(fuel)+"%<br>"+(gear?"GEAR DOWN":"GEAR UP")+"<br>"+(flaps?"FLAPS":"CLEAN")+"<br>"+(mission===4?"LANDED":"MISSION "+(mission+1)+"/4")+"<br>PITCH "+Math.round(pitch)+"°<br>TRIM "+trim.toFixed(1)+"°<br>"+(autopilot?"AP ON ":"")+(speed<75&&power>70&&alt>15?"STALL":"");let target,look;if(viewMode==="cockpit"){if(!cockpitGroup){cockpitGroup=makeA320Cockpit();plane.add(cockpitGroup);bindCockpitControls()}cockpitGroup.visible=selected==="A320";target=new THREE.Vector3(plane.position.x,plane.position.y+1.45,plane.position.z-1);look=new THREE.Vector3(plane.position.x,plane.position.y+1.45,plane.position.z-35)}else if(viewMode==="wing"){target=new THREE.Vector3(plane.position.x+5,plane.position.y+2,plane.position.z+4);look=new THREE.Vector3(plane.position.x,plane.position.y,plane.position.z-25)}else if(viewMode==="cabin"){target=new THREE.Vector3(plane.position.x,plane.position.y+1.3,plane.position.z+2);look=new THREE.Vector3(plane.position.x,plane.position.y+1.4,plane.position.z-25)}else{target=new THREE.Vector3(plane.position.x*.55,plane.position.y+3.1,plane.position.z+cameraDistance);look=new THREE.Vector3(plane.position.x,plane.position.y+.15,plane.position.z-6)}g.camera.position.lerp(target,.10);g.camera.lookAt(look);g.renderer.render(g.scene,g.camera);activeAnimation=requestAnimationFrame(loop)}
  loadAircraft();loop(performance.now());
 }
 ;window.flightSim=flightSimReal;
