@@ -1,10 +1,10 @@
-(function(){
+(function(){for(const p of pickups){if(!p.got&&Math.abs(p.x-world-W*.28)<24){p.got=true;coins++;bankCoins++;localStorage.setItem("geta_hill_coins",bankCoins);score+=25;sound("coin");burst(W*.28,gy(world)-28,12);}}
 function hillClimb(){
  const box=document.getElementById("hillBox");if(!box)return;
  const vehicles=[{name:"🚙 Buggy",color:"#e63946",acc:.11,max:8.5,grip:.18},{name:"🛻 4x4",color:"#2a9d8f",acc:.095,max:7.3,grip:.22},{name:"🏎️ Sport",color:"#f4a261",acc:.135,max:9.5,grip:.14}]; const upgrades=[0,0,0]; let bankCoins=+(localStorage.getItem("geta_hill_coins")||0);
  const levels=[{name:"🌄 Green Hills",sky:"#55b7ff",ground:"#5c9d3e",goal:1500,water:false,tunnel:false},{name:"🌊 Mountain Lake",sky:"#62c8ff",ground:"#4f963b",goal:1800,water:true,tunnel:false},{name:"🌋 Canyon Tunnel",sky:"#ffb36b",ground:"#70452c",goal:2100,water:false,tunnel:true}];
  let vehicle=0,level=0,canvas,ctx,W=0,H=0,dpr=1,seed=Math.random()*10000,world=0,dist=0,coins=0,fuel=100,gas=0,brake=0,dead=false,last=0,raf,score=0,paused=false,checkpoint=0,wheelSpin=0,splash=0,landFx=0,lastAir=0,hitFx=0,particles=[],audio=null;
- const car={angle:0,speed:0,bounce:0,air:0,airAngle:0};
+ const car={angle:0,speed:0,bounce:0,air:0,airAngle:0}; let pickups=[];
  function unlocked(i){return i===0||+localStorage.getItem("geta_hill_level_"+i)===1} 
  function choose(){
   box.innerHTML='<div class="hillSelect"><h2>🏁 GETA HILL CLIMB</h2><p>🚗 Berge · 🌊 Wasser · 🌋 Tunnel</p><button id="hillPlay" style="font-size:20px;padding:12px 30px;margin:8px">▶ PLAY</button><div id="hillSetup" style="display:none"><p>Wähle dein Fahrzeug</p><div id="hillGarage" style="margin:8px 0;padding:8px;border:2px solid #ffffff55;border-radius:12px;background:#0002"><b>🔧 GARAGE</b><div id="hillWallet">🪙 "+bankCoins+"</div><div id="hillStats">Motor ▰▰▱ · Grip ▰▰▱</div><button id="hillUpgrade">⬆ Upgrade <small>(kostenlos)</small></button></div><p>Wähle Strecke</p><div class="hillCars">'+vehicles.map((v,i)=>'<button data-v="'+i+'">'+v.name+'<small>'+(i===0?"Ausgeglichen":i===1?"Stabil":"Schnell")+'</small></button>').join("")+'</div><div class="hillLevels">'+levels.map((l,i)=>'<button data-l="'+i+'" '+(!unlocked(i)?'disabled':'')+'>'+l.name+'<small>'+l.goal+' m'+(unlocked(i)?'':' 🔒')+'</small></button>').join("")+'</div></div></div>';
@@ -16,7 +16,7 @@ function hillClimb(){
   box.querySelectorAll("[data-v]").forEach(b=>b.onpointerdown=()=>{vehicle=+b.dataset.v;refresh()});
   box.querySelectorAll("[data-l]").forEach(b=>b.onpointerdown=()=>{level=+b.dataset.l;start()});
  }
- function noise(x){return Math.sin(x*.0017+seed)*.55+Math.sin(x*.0043+seed*1.7)*.25+Math.sin(x*.0091+seed*.31)*.12}
+ function makePickups(){pickups=[];for(let x=180;x<levels[level].goal;x+=80+Math.random()*70)pickups.push({x,got:false,bob:Math.random()*6});} function noise(x){return Math.sin(x*.0017+seed)*.55+Math.sin(x*.0043+seed*1.7)*.25+Math.sin(x*.0091+seed*.31)*.12}
  function gy(x){
   let y=H*.70-noise(x)*H*.17-Math.sin(x*.0007+seed)*H*.07;
   if(level===1 && x>850&&x<1120)y=H*.67;
@@ -25,7 +25,7 @@ function hillClimb(){
  function resize(){if(!canvas)return;const r=box.getBoundingClientRect();W=Math.max(280,r.width);H=Math.max(220,r.height);dpr=Math.min(devicePixelRatio||1,2);canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+"px";canvas.style.height=H+"px";ctx.setTransform(dpr,0,0,dpr,0,0)}
  function sound(type){try{if(!audio)audio=new (window.AudioContext||window.webkitAudioContext)();if(audio.state==="suspended")audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);const f=type==="hit"?90:type==="land"?130:type==="coin"?720:210;o.frequency.value=f;o.type=type==="hit"?"sawtooth":"sine";g.gain.setValueAtTime(.045,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.13);o.start();o.stop(audio.currentTime+.14)}catch(e){}}function burst(px,py,n=8){for(let i=0;i<n;i++)particles.push({x:px,y:py,vx:(Math.random()-.5)*3,vy:-Math.random()*3-1,life:20+Math.random()*15})}function updateParticles(){for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.12;p.life--;if(p.life<=0)particles.splice(i,1);else{ctx.globalAlpha=p.life/35;ctx.fillStyle="#e7c27a";ctx.fillRect(p.x,p.y,3,3)}}ctx.globalAlpha=1}function circle(x,y,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
  function drawMountain(col,base,amp,scale,off){ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(0,H);for(let sx=0;sx<=W;sx+=10)ctx.lineTo(sx,base-noise(world*scale+sx*scale+off)*amp);ctx.lineTo(W,H);ctx.fill()}
- function draw(){
+ function draw(){pickups.forEach(p=>{if(!p.got){const sx=p.x-world+W*.28;if(sx>-20&&sx<W+20){const py=gy(p.x)-28+Math.sin(Date.now()/180+p.bob)*5;circle(sx,py,9,"#ffd54a");circle(sx,py,4,"#fff1a8");}}});
   const L=levels[level],sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,L.sky);sky.addColorStop(.62,"#d7f2ff");sky.addColorStop(1,"#eaf7d7");ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
   circle(W*.78,H*.16,28,"#fff0a0");drawMountain(level===2?"#9b6545":"#a5c99e",H*.64,H*.13,.35,2000);drawMountain(level===2?"#70452c":"#70a968",H*.70,H*.15,.52,4000);
   const x=world+W*.34,ground=gy(x);
@@ -43,7 +43,7 @@ function hillClimb(){
   document.getElementById("hcDist").textContent=Math.floor(dist)+" m";document.getElementById("hcCoins").textContent="🪙 "+coins;document.getElementById("hcFuel").textContent="⛽ "+Math.max(0,Math.floor(fuel))+"%";document.getElementById("hcScore").textContent="⭐ "+Math.floor(score);document.getElementById("hcLevel").textContent=L.name+" · Checkpoint "+Math.floor(checkpoint)+"/"+L.goal+" m";
  }
  function end(msg){if(dead)return;dead=true;cancelAnimationFrame(raf);score=Math.floor(dist)+coins*25;const old=+localStorage.getItem("geta_hill_high")||0;if(score>old)localStorage.setItem("geta_hill_high",score);if(msg.includes("Level geschafft")){localStorage.setItem("geta_hill_level_"+Math.min(2,level+1),1)}box.insertAdjacentHTML("beforeend",'<div class="hillResult"><strong>'+msg+'</strong><div>'+levels[level].name+' · '+vehicles[vehicle].name+'<br>🏁 Strecke: '+Math.floor(dist)+' m<br>🪙 Münzen: '+coins+'<br>⭐ Score: '+score+'<br>🏆 Rekord: '+Math.max(score,old)+'</div><button onclick="hillClimb()">Nochmal</button></div>')}
- function start(){
+ function start(){makePickups();
   box.innerHTML='<canvas></canvas><div class="hillHud"><span id="hcLevel">'+levels[level].name+'</span><span id="hcDist">0 m</span><span id="hcCoins">🪙 0</span><span id="hcFuel">⛽ 100%</span><span id="hcScore">⭐ 0</span><button id="hcPause">⏸</button></div><div class="hillHint">◀ Bremsen &nbsp; ▶ Gas</div><div class="hillControls"><button id="hcBrake">◀</button><button id="hcGas">▶</button></div>';
   canvas=box.querySelector("canvas");ctx=canvas.getContext("2d");resize();addEventListener("resize",resize);const btn=(el,on)=>{el.onpointerdown=e=>{e.preventDefault();on(1)};el.onpointerup=el.onpointercancel=()=>on(0)};btn(box.querySelector("#hcGas"),v=>gas=v);btn(box.querySelector("#hcBrake"),v=>brake=v);box.querySelector("#hcPause").onpointerdown=e=>{e.preventDefault();paused=!paused;box.querySelector("#hcPause").textContent=paused?"▶":"⏸"};
   world=0;dist=0;coins=0;fuel=100;gas=0;brake=0;dead=false;score=0;paused=false;checkpoint=0;wheelSpin=0;car.angle=0;car.speed=0;car.air=0;car.airAngle=0;last=performance.now();loop(last)
