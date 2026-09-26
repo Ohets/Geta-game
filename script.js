@@ -103,10 +103,10 @@ function flightSimReal(){
   A320:"assets/A320_nologo.glb",
   A350:"assets/A350_nologo.glb",
   B737:"assets/B737_nologo.glb",
-  A380:"https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/A380_nologo.glb",
-  B787:"https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/B787_nologo.glb",
-  EVTOL:"https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/EVTOL_nologo.glb",
-  Drone:"https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/drone_nologo.glb"
+  A380:"assets/imported/A380_nologo.glb",
+  B787:"assets/imported/B787_nologo.glb",
+  EVTOL:"assets/imported/EVTOL_nologo.glb",
+  Drone:"assets/imported/drone_nologo.glb"
 };
  let selected="A320",px=0,py=.2,heading=0,alt=500,last=performance.now(),alive=true;
  function loadAircraft(){plane.clear();msg.textContent="🛫 "+selected+" wird geladen …";loadRealGLB(urls[selected],plane,ok=>msg.textContent=ok?"🟢 "+selected+" geladen":"🔴 GLB nicht geladen");}
@@ -118,19 +118,17 @@ function flightSimReal(){
  [["A320",-12,-20],["A350",12,-35],["B737",-12,-50],["A380",14,-65],["B787",-14,-80],["EVTOL",14,-95],["Drone",-14,-108]].forEach(a=>{const h=new THREE.Group();h.position.set(a[1],0,a[2]);world.add(h);loadRealGLB(urls[a[0]],h,ok=>{if(!ok)h.add(cube([2.5,.8,5],0x777777));});});
  // Additional GLB airport and city scenery. Each model is isolated in its own group so a failed remote model cannot stop the game.
  const sceneryUrls=[
-  ["Hangar","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_01_Art.glb",-22,-2,-18,2.5],
-  ["Airport building","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_02_Art.glb",22,-2,-28,2.2],
-  ["Terminal","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_03_Art.glb",-24,-2,-52,2.2],
-  ["Hangar 2","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_04_Art.glb",24,-2,-62,2.3],
-  ["City building 1","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_05_Art.glb",-35,-2,-95,2],
-  ["City building 2","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_06_Art.glb",-22,-2,-105,2],
-  ["City building 3","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_07_Art.glb",25,-2,-110,2],
-  ["City building 4","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_08_Art.glb",38,-2,-125,2],
-  ["City building 5","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_09_Art.glb",-38,-2,-130,2],
-  ["Vehicle","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Car_01_Art.glb",-10,-2,-38,1.2],
-  ["Vehicle 2","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Car_02_Art.glb",10,-2,-45,1.2],
-  ["Container","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Container_01_Art.glb",-28,-2,-38,1.5],
-  ["Crate","https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Crate_01_Art.glb",28,-2,-42,1.5]
+  ["Airport hangar","assets/environment/Building_Large.glb",-22,-2,-18,2.5],
+  ["Airport building","assets/environment/Building_Medium.glb",22,-2,-28,2.2],
+  ["Terminal","assets/environment/Building_Large.glb",-24,-2,-52,2.2],
+  ["Hangar 2","assets/environment/Building_Medium.glb",24,-2,-62,2.3],
+  ["City building 1","assets/environment/Building_Small.glb",-35,-2,-95,2],
+  ["City building 2","assets/environment/Building_Medium.glb",-22,-2,-105,2],
+  ["City building 3","assets/environment/Building_Small.glb",25,-2,-110,2],
+  ["City building 4","assets/environment/Building_Large.glb",38,-2,-125,2],
+  ["City building 5","assets/environment/Building_Medium.glb",-38,-2,-130,2],
+  ["Vehicle","assets/environment/SmallPlane.glb",-10,0,-38,1.2],
+  ["Vehicle 2","assets/environment/SmallPlane.glb",10,0,-45,1.2]
  ];
 
  // Extra CC0 Kenney GLB scenery served from the public Bevy asset mirror.
@@ -165,11 +163,9 @@ function flightSimReal(){
 
  // Large connected city district: a dense grid of real GLB buildings around procedural roads.
  const cityBuildings=[
-  "https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_05_Art.glb",
-  "https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_06_Art.glb",
-  "https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_07_Art.glb",
-  "https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_08_Art.glb",
-  "https://raw.githubusercontent.com/ToxSam/cc0-models-Polygonal-Mind/main/projects/transit/Building_09_Art.glb"
+  "assets/environment/Building_Small.glb",
+  "assets/environment/Building_Medium.glb",
+  "assets/environment/Building_Large.glb"
  ];
  const cityRoads=new THREE.Group();cityRoads.position.y=.03;world.add(cityRoads);
  for(let r=0;r<7;r++){
@@ -201,18 +197,17 @@ function flightSimReal(){
 
  // Verified CC0 Quaternius GLB scenery.
  // These models are from a repository that includes the Quaternius CC0 license file.
- const CC0="https://raw.githubusercontent.com/anshaneja5/skyline-run/main/public/assets/models/";
+ const CC0="assets/environment/";
  const cc0Glbs=[
-  ["CC0 large building",CC0+"b_large.glb",-58,-2,-118,1.8],
-  ["CC0 medium building",CC0+"b_medium.glb",58,-2,-132,1.7],
-  ["CC0 small building",CC0+"b_small.glb",-62,-2,-150,1.5],
-  ["CC0 small building 2",CC0+"b_small.glb",62,-2,-164,1.5],
-  ["CC0 propeller aircraft",CC0+"prop_ac.glb",-18,0,-112,1.2],
-  ["CC0 aircraft",CC0+"plane.glb",18,0,-126,1.2],
-  ["CC0 tree 1",CC0+"tree1.glb",-70,-2,-138,1.8],
-  ["CC0 tree 2",CC0+"tree2.glb",70,-2,-151,1.8],
-  ["CC0 tree 3",CC0+"tree3.glb",-72,-2,-176,1.8],
-  ["CC0 bush",CC0+"bush.glb",72,-2,-184,2.0]
+  ["CC0 large building",CC0+"Building_Large.glb",-58,-2,-118,1.8],
+  ["CC0 medium building",CC0+"Building_Medium.glb",58,-2,-132,1.7],
+  ["CC0 small building",CC0+"Building_Small.glb",-62,-2,-150,1.5],
+  ["CC0 small building 2",CC0+"Building_Small.glb",62,-2,-164,1.5],
+  ["CC0 propeller aircraft",CC0+"SmallPlane.glb",-18,0,-112,1.2],
+  ["CC0 tree 1",CC0+"Tree_Quaternius_1.glb",-70,-2,-138,1.8],
+  ["CC0 tree 2",CC0+"Tree_Quaternius_2.glb",70,-2,-151,1.8],
+  ["CC0 tree 3",CC0+"Tree_Quaternius_3.glb",-72,-2,-176,1.8],
+  ["CC0 bush",CC0+"Bush.glb",72,-2,-184,2.0]
  ];
  cc0Glbs.forEach(a=>{
   const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);
@@ -220,12 +215,12 @@ function flightSimReal(){
  });
 
  // Additional verified CC0 scenery from Kenney-based asset collection.
- const CC0K="https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/main/";
+ const CC0K="assets/environment/";
  const cc0Kenney=[
-  ["CC0 suburban house 1",CC0K+"buildings/kenney-city-kit-suburban/building_1.glb",-78,-2,-118,1.6],
-  ["CC0 suburban house 2",CC0K+"buildings/kenney-city-kit-suburban/building_2.glb",78,-2,-132,1.6],
-  ["CC0 modular building",CC0K+"buildings/kenney-modular-buildings/building_1.glb",-82,-2,-154,1.7],
-  ["CC0 tiny town building",CC0K+"buildings/kenney-tiny-town/building_1.glb",82,-2,-168,1.5]
+  ["CC0 suburban house 1",CC0K+"Building_Small.glb",-78,-2,-118,1.6],
+  ["CC0 suburban house 2",CC0K+"Building_Medium.glb",78,-2,-132,1.6],
+  ["CC0 modular building",CC0K+"Building_Large.glb",-82,-2,-154,1.7],
+  ["CC0 tiny town building",CC0K+"Building_Small.glb",82,-2,-168,1.5]
  ];
  cc0Kenney.forEach(a=>{const h=new THREE.Group();h.position.set(a[2],a[3],a[4]);h.scale.setScalar(a[5]);world.add(h);loadRealGLB(a[1],h,ok=>{if(!ok)h.add(cube([1.5,.6,1.5],0x777777));});});
 
@@ -235,23 +230,7 @@ function flightSimReal(){
  const CC0_GITHUB_RAW="https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/main/buildings/kenney-city-kit-suburban/Models/GLB%20format/";
  const lazyCC0Objects=[];
  let lazyCC0Ready=false;
- async function discoverCC0GLBs(){
-  try{
-   const res=await fetch(CC0_GITHUB_API,{headers:{Accept:"application/vnd.github+json"}});
-   if(!res.ok)throw new Error("GitHub API "+res.status);
-   const list=await res.json();
-   const glbs=list.filter(x=>x.type==="file"&&/\\.glb$/i.test(x.name));
-   glbs.forEach((x,i)=>{
-    const angle=(i%12)/12*Math.PI*2;
-    const ring=34+Math.floor(i/12)*12;
-    const z=-72-Math.floor(i/12)*18;
-    const slot={name:x.name,url:CC0_GITHUB_RAW+encodeURIComponent(x.name),position:new THREE.Vector3(Math.cos(angle)*ring,-2, z+Math.sin(angle)*ring*.45),loaded:false,loading:false,group:null};
-    lazyCC0Objects.push(slot);
-   });
-   lazyCC0Ready=true;
-   console.info("CC0 GLB-Katalog:",lazyCC0Objects.length,"Modelle gefunden");
-  }catch(e){console.warn("CC0 GitHub-Katalog konnte nicht geladen werden",e)}
- }
+ async function discoverCC0GLBs(){ return; }
  function updateLazyCC0Objects(aircraft,world){
   if(!lazyCC0Ready)return;
   const ap=aircraft.getWorldPosition(new THREE.Vector3());
@@ -460,10 +439,10 @@ function updateGLBVisibility(root,aircraft){
 function addRealAirliners(world){
  const models=[
   ["A320","assets/A320_nologo.glb"],["A350","assets/A350_nologo.glb"],["B737","assets/B737_nologo.glb"],
-  ["A380","https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/A380_nologo.glb"],
-  ["B787","https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/B787_nologo.glb"],
-  ["EVTOL","https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/EVTOL_nologo.glb"],
-  ["Drone","https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/drone_nologo.glb"]
+  ["A380","assets/imported/A380_nologo.glb"],
+  ["B787","assets/imported/B787_nologo.glb"],
+  ["EVTOL","assets/imported/EVTOL_nologo.glb"],
+  ["Drone","assets/imported/drone_nologo.glb"]
  ];
  models.forEach((m,i)=>{
   const g=new THREE.Group();g.position.set(-12+i*12,1.8,-35-i*25);g.rotation.y=Math.PI;g.scale.setScalar(1);world.add(g);
