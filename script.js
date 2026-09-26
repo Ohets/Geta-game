@@ -336,6 +336,9 @@ function loadRealGLB(url,group,done){
   // Clone the parsed model instead of parsing/downloading the same GLB again.
   const instance=model.clone(true);
   optimizeGLBModel(instance,{castShadow:false});
+  // The aircraft GLBs use the opposite forward axis from the simulator world.
+  // Rotate the model 180° so the nose points in the direction of flight.
+  if(/A320|A350|B737|A380|B787|EVTOL|drone/i.test(url)) instance.rotation.y=Math.PI;
   group.add(instance);
 
   // Distance-based rendering: objects far behind the aircraft are skipped.
