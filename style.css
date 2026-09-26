@@ -6,3 +6,9 @@ body{margin:0;font-family:system-ui,sans-serif;background:linear-gradient(135deg
 .hillHint{bottom:clamp(66px,10vw,90px);font-size:clamp(9px,1.6vw,12px)}
 @media (orientation:landscape) and (max-height:600px){.hillBox{height:calc(100vh - 110px);min-height:240px}.hillControls{bottom:8px}.hillControls button{height:48px}.hillHint{bottom:60px}}
 @media (max-width:600px){.hillBox{height:clamp(300px,68vw,460px);min-height:300px}.hillHud{font-size:clamp(9px,2.7vw,11px)}.hillCars button,.hillLevels button{min-width:74px;padding:9px 10px}.hillSelect{overflow:auto;padding:8px;box-sizing:border-box}.hillSelect h2{font-size:clamp(18px,6vw,26px)}}
+
+/* Hill Climb: scrollable in-game menu so all vehicle/level buttons are reachable */
+.hillSelect{height:100%;min-height:100%;box-sizing:border-box;overflow-y:auto;overflow-x:hidden;justify-content:flex-start;padding:14px 10px 32px;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain}
+.hillSelect h2{flex:0 0 auto}
+.hillSelect p,.hillCars,.hillLevels,#hillGarage,#hillProgressTop,#hillLevelProgress{flex:0 0 auto}
+@media(max-width:600px){.hillSelect{padding:12px 8px 36px;justify-content:flex-start;touch-action:pan-y}.hillSelect::-webkit-scrollbar{width:6px}.hillSelect::-webkit-scrollbar-thumb{background:#0006;border-radius:8px}}
