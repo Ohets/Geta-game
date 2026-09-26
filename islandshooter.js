@@ -1,1 +1,178 @@
-(()=>{function islandShooter(){const box=document.getElementById("islandBox");if(!box||!window.THREE)return;let scene,camera,renderer,clock,raf;let keys={},started=false,paused=false,health=100,ammo=30,score=0,mission=0,yaw=0,pitch=0,shootCd=0,spawnTimer=0;const enemies=[],bullets=[],trees=[],pickups=[];const ui=()=>box.querySelector("#isHud");function hud(){const h=ui();if(h)h.innerHTML="❤️ "+Math.max(0,Math.round(health))+"% &nbsp; 🔫 "+ammo+"/30 &nbsp; ⭐ "+score+" &nbsp; 🎯 "+mission+"/12"}function makeMat(c){return new THREE.MeshStandardMaterial({color:c})}function addTree(x,z){const g=new THREE.Group();const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.35,.5,3,7),makeMat(0x654321));trunk.position.y=1.5;const crown=new THREE.Mesh(new THREE.ConeGeometry(2.3,5,8),makeMat(0x176b38));crown.position.y=4.5;g.add(trunk,crown);g.position.set(x,0,z);scene.add(g);trees.push(g)}function addEnemy(){if(enemies.length>7)return;const g=new THREE.Group();const body=new THREE.Mesh(new THREE.CylinderGeometry(.42,.48,1.25,8),makeMat(0xb52b2b));body.position.y=1.1;const head=new THREE.Mesh(new THREE.SphereGeometry(.38,10,8),makeMat(0xe0a080));head.position.y=2;g.add(body,head);g.position.set((Math.random()-.5)*70,0,(Math.random()-.5)*70);if(g.position.length()<18)g.position.x+=25;g.userData={hp:2,cool:Math.random()*2,speed:1.2+Math.random()*1.2};scene.add(g);enemies.push(g)}function addPickup(){const p=new THREE.Mesh(new THREE.OctahedronGeometry(.45),makeMat(0xffd21f));p.position.set((Math.random()-.5)*70,.8,(Math.random()-.5)*70);p.userData={kind:Math.random()<.55?"ammo":"med"};scene.add(p);pickups.push(p)}function start(){box.innerHTML='<div id="isHud" class="islandHud"></div><div id="isMsg" class="islandMsg">🌴 ISLAND ASSAULT<br><small>Finde und besiege 12 Gegner</small></div><div class="islandCross">+</div><div class="islandTouch"><button id="isLeft">◀</button><button id="isFire">🔫</button><button id="isRight">▶</button></div><div class="islandMove"><button id="isForward">▲</button><button id="isBack">▼</button></div><button id="isPause">⏸</button><canvas></canvas>';const c=box.querySelector("canvas");scene=new THREE.Scene();scene.background=new THREE.Color(0x75cfff);scene.fog=new THREE.Fog(0x75cfff,35,105);camera=new THREE.PerspectiveCamera(70,1,.05,180);camera.position.set(0,2.1,12);renderer=new THREE.WebGLRenderer({canvas:c,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.shadowMap.enabled=true;clock=new THREE.Clock();scene.add(new THREE.HemisphereLight(0xbfeaff,0x315522,1.5));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(30,50,20);sun.castShadow=true;scene.add(sun);const ground=new THREE.Mesh(new THREE.PlaneGeometry(180,180,20,20),makeMat(0x3f9a45));ground.rotation.x=-Math.PI/2;scene.add(ground);const beach=new THREE.Mesh(new THREE.CircleGeometry(105,64),makeMat(0xd8c27a));beach.rotation.x=-Math.PI/2;beach.position.y=-.04;scene.add(beach);const water=new THREE.Mesh(new THREE.PlaneGeometry(240,240),new THREE.MeshStandardMaterial({color:0x168ec2,transparent:true,opacity:.72}));water.rotation.x=-Math.PI/2;water.position.y=-.18;scene.add(water);for(let i=0;i<45;i++)addTree((Math.random()-.5)*95,(Math.random()-.5)*95);for(let i=0;i<5;i++)addEnemy();for(let i=0;i<7;i++)addPickup();hud();resize();window.addEventListener("resize",resize);let lastX=0,lastY=0;box.onpointerdown=e=>{if(e.target.tagName==="BUTTON")return;lastX=e.clientX;lastY=e.clientY};box.onpointermove=e=>{if(!started||paused)return;if(e.buttons){yaw-=(e.clientX-lastX)*.004;pitch-=(e.clientY-lastY)*.003;pitch=Math.max(-1.15,Math.min(1.15,pitch));lastX=e.clientX;lastY=e.clientY}};function resize(){const r=box.getBoundingClientRect();renderer.setSize(r.width,Math.max(300,r.height),false);camera.aspect=r.width/Math.max(300,r.height);camera.updateProjectionMatrix()}const bind=(id,k)=>{const b=box.querySelector(id);b.onpointerdown=e=>{e.preventDefault();keys[k]=1};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>keys[k]=0};bind("#isForward","w");bind("#isBack","s");bind("#isLeft","a");bind("#isRight","d");box.querySelector("#isFire").onpointerdown=e=>{e.preventDefault();fire()};box.querySelector("#isPause").onclick=()=>{paused=!paused;box.querySelector("#isPause").textContent=paused?"▶":"⏸"};started=true;raf=requestAnimationFrame(loop)}function fire(){if(!started||paused||shootCd>0||ammo<=0)return;ammo--;shootCd=.22;hud();const ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2(0,0),camera);const hits=ray.intersectObjects(enemies,true);if(hits.length&&hits[0].distance<45){let e=hits[0].object;while(e.parent&&!e.userData.hp)e=e.parent;if(e.userData.hp){e.userData.hp--;e.children.forEach(x=>{x.scale.multiplyScalar(.98)});if(e.userData.hp<=0){scene.remove(e);enemies.splice(enemies.indexOf(e),1);score+=100;mission++;setTimeout(addEnemy,900);hud();if(mission>=12)end("🏆 Insel gesichert!")}else{score+=25}}}else{const end=camera.position.clone();const dir=new THREE.Vector3();camera.getWorldDirection(dir);end.add(dir.multiplyScalar(30));const b=new THREE.Mesh(new THREE.SphereGeometry(.07,6,6),makeMat(0xffff88));b.position.copy(camera.position);scene.add(b);bullets.push({m:b,d:dir})}}function end(t){started=false;box.insertAdjacentHTML("beforeend",'<div class="islandResult"><h2>'+t+'</h2><p>⭐ Punkte: '+score+'</p><button id="isAgain">🔄 Nochmal</button></div>');box.querySelector("#isAgain").onclick=()=>islandShooter()}function loop(){if(!renderer)return;const dt=Math.min(clock.getDelta(),.05);shootCd=Math.max(0,shootCd-dt);if(started&&!paused){const dir=new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw));const side=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));if(keys.w)camera.position.addScaledVector(dir,-5*dt);if(keys.s)camera.position.addScaledVector(dir,5*dt);if(keys.a)camera.position.addScaledVector(side,-5*dt);if(keys.d)camera.position.addScaledVector(side,5*dt);camera.position.x=Math.max(-82,Math.min(82,camera.position.x));camera.position.z=Math.max(-82,Math.min(82,camera.position.z));camera.rotation.order="YXZ";camera.rotation.y=yaw;camera.rotation.x=pitch;spawnTimer+=dt;if(spawnTimer>5){spawnTimer=0;if(enemies.length<7)addEnemy()}enemies.forEach(e=>{const dx=camera.position.x-e.position.x,dz=camera.position.z-e.position.z,dist=Math.hypot(dx,dz);e.lookAt(camera.position.x,1,e.position.z);if(dist>3)e.position.add(new THREE.Vector3(dx/dist,0,dz/dist).multiplyScalar(e.userData.speed*dt));e.userData.cool-=dt;if(dist<15&&e.userData.cool<=0){e.userData.cool=1.4;health-=8;hud();if(health<=0)end("💀 Mission gescheitert")} });pickups.forEach((p,i)=>{p.rotation.y+=dt*2;p.rotation.x+=dt;if(p.position.distanceTo(camera.position)<2){if(p.userData.kind==="ammo")ammo=Math.min(30,ammo+12);else health=Math.min(100,health+25);scene.remove(p);pickups.splice(i,1);hud()}});bullets.forEach((b,i)=>{b.m.position.addScaledVector(b.d,35*dt);if(b.m.position.length()>130){scene.remove(b.m);bullets.splice(i,1)}})}renderer.render(scene,camera);raf=requestAnimationFrame(loop)}start()}window.islandShooter=islandShooter})()
+(()=>{function islandShooter(){
+const box=document.getElementById("islandBox");if(!box||!window.THREE)return;
+let scene,camera,renderer,clock,raf,started=false,paused=false;
+let health=100,ammo=30,score=0,mission=0,yaw=0,pitch=0,shootCd=0,grenades=3,stamina=100;
+let weapon=0,inVehicle=false,vehicle=null,vehicleSpeed=0,wanted=0,objective=0,missionStep=0;
+const weapons=[
+ {name:"Rifle",mag:30,max:30,damage:1,cool:.20},
+ {name:"SMG",mag:45,max:45,damage:1,cool:.10},
+ {name:"Shotgun",mag:8,max:8,damage:3,cool:.65}
+];
+const enemies=[],pickups=[],trees=[],bullets=[],grenadesFx=[],houses=[],cars=[],campFlags=[],particles=[];
+const W=110;
+
+function mat(c){return new THREE.MeshStandardMaterial({color:c,roughness:.8})}
+function hud(){
+ const h=box.querySelector("#isHud");if(!h)return;
+ const w=weapons[weapon];
+ h.innerHTML="❤️ "+Math.max(0,Math.round(health))+"% &nbsp; 🔫 "+ammo+"/"+w.max+
+ " &nbsp; ⭐ "+score+"<br>🎯 Mission: "+missionStep+"/3 &nbsp; 💣 "+grenades+
+ " &nbsp; 🏃 "+Math.round(stamina)+"% &nbsp; "+w.name+(inVehicle?" &nbsp; 🚙 JEEP":"");
+}
+function addTree(x,z,s=1){
+ const g=new THREE.Group();
+ const t=new THREE.Mesh(new THREE.CylinderGeometry(.3*s,.5*s,3*s,7),mat(0x654321));t.position.y=1.5*s;
+ const c=new THREE.Mesh(new THREE.ConeGeometry(2*s,5*s,8),mat(0x176b38));c.position.y=4.4*s;
+ g.add(t,c);g.position.set(x,0,z);scene.add(g);trees.push(g);
+}
+function addHouse(x,z){
+ const g=new THREE.Group();
+ const b=new THREE.Mesh(new THREE.BoxGeometry(7,4,6),mat(0xc88952));b.position.y=2;
+ const roof=new THREE.Mesh(new THREE.ConeGeometry(5.5,2.6,4),mat(0x783d28));roof.rotation.y=Math.PI/4;roof.position.y=5;
+ const door=new THREE.Mesh(new THREE.BoxGeometry(1.2,2.1,.12),mat(0x35251c));door.position.set(0,1.05,3.05);
+ g.add(b,roof,door);g.position.set(x,0,z);scene.add(g);houses.push(g);
+}
+function addCamp(x,z){
+ const base=new THREE.Mesh(new THREE.CylinderGeometry(6,6,.15,24),mat(0x66543d));base.position.set(x,.05,z);scene.add(base);
+ const flag=new THREE.Mesh(new THREE.BoxGeometry(.12,5,.12),mat(0x44352a));flag.position.set(x,2.5,z);scene.add(flag);
+ const cloth=new THREE.Mesh(new THREE.BoxGeometry(2,.9,.08),mat(0xb51f24));cloth.position.set(x+1,4.25,z);scene.add(cloth);campFlags.push(base);
+ for(let i=0;i<5;i++)addEnemy(x+(Math.random()-.5)*12,z+(Math.random()-.5)*12,true);
+}
+function addEnemy(cx=0,cz=0,camp=false){
+ if(enemies.length>=14)return;
+ const g=new THREE.Group();
+ const body=new THREE.Mesh(new THREE.CylinderGeometry(.42,.5,1.3,8),mat(camp?0x273d8e:0xb52b2b));body.position.y=1.1;
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.38,10,8),mat(0xe0a080));head.position.y=2;
+ const gun=new THREE.Mesh(new THREE.BoxGeometry(.15,.15,.9),mat(0x222222));gun.position.set(.48,1.25,.35);gun.rotation.x=.15;
+ g.add(body,head,gun);
+ g.position.set(cx+(camp?0:(Math.random()-.5)*90),0,cz+(camp?0:(Math.random()-.5)*90));
+ if(!camp&&g.position.length()<22)g.position.x+=30;
+ g.userData={hp:camp?3:2,cool:Math.random()*2,speed:camp?.9:1.25+Math.random()*1.3,camp,alert:false};
+ scene.add(g);enemies.push(g);
+}
+function addPickup(x,z,kind){
+ const p=new THREE.Mesh(new THREE.OctahedronGeometry(.5),mat(kind==="med"?0x42e06f:kind==="ammo"?0xffd21f:0x52aaff));
+ p.position.set(x,.8,z);p.userData={kind};scene.add(p);pickups.push(p);
+}
+function addCar(x,z){
+ const g=new THREE.Group();
+ const body=new THREE.Mesh(new THREE.BoxGeometry(3.2,1.1,5.2),mat(0x356b42));body.position.y=1.1;
+ const cabin=new THREE.Mesh(new THREE.BoxGeometry(2.5,1.1,2.5),mat(0x24352b));cabin.position.set(0,2,.1);
+ for(const xw of [-1.55,1.55])for(const zw of [-1.65,1.65]){
+  const w=new THREE.Mesh(new THREE.CylinderGeometry(.48,.48,.35,12),mat(0x111111));w.rotation.z=Math.PI/2;w.position.set(xw,.55,zw);g.add(w);
+ }
+ g.add(body,cabin);g.position.set(x,0,z);scene.add(g);cars.push(g);return g;
+}
+function makeWorld(){
+ scene=new THREE.Scene();scene.background=new THREE.Color(0x72cfff);scene.fog=new THREE.Fog(0x72cfff,45,150);
+ camera=new THREE.PerspectiveCamera(70,1,.05,220);camera.position.set(0,2.2,18);
+ renderer=new THREE.WebGLRenderer({canvas:box.querySelector("canvas"),antialias:true});
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.shadowMap.enabled=true;clock=new THREE.Clock();
+ scene.add(new THREE.HemisphereLight(0xbfeaff,0x315522,1.6));
+ const sun=new THREE.DirectionalLight(0xffffff,2.1);sun.position.set(40,70,20);sun.castShadow=true;scene.add(sun);
+ const ground=new THREE.Mesh(new THREE.PlaneGeometry(220,220,30,30),mat(0x3f9a45));ground.rotation.x=-Math.PI/2;scene.add(ground);
+ const beach=new THREE.Mesh(new THREE.CircleGeometry(125,64),mat(0xd8c27a));beach.rotation.x=-Math.PI/2;beach.position.y=-.04;scene.add(beach);
+ const water=new THREE.Mesh(new THREE.PlaneGeometry(300,300),new THREE.MeshStandardMaterial({color:0x168ec2,transparent:true,opacity:.7}));water.rotation.x=-Math.PI/2;water.position.y=-.2;scene.add(water);
+ for(let i=0;i<70;i++)addTree((Math.random()-.5)*130,(Math.random()-.5)*130,.75+Math.random()*.55);
+ [[-24,-34],[25,-22],[-42,28],[38,34]].forEach(p=>addHouse(p[0],p[1]));
+ [[-35,-45],[45,-5],[-5,48]].forEach(p=>addCamp(p[0],p[1]));
+ addCar(8,10);addCar(-18,20);
+ for(let i=0;i<10;i++)addPickup((Math.random()-.5)*100,(Math.random()-.5)*100,i%3===0?"med":i%3===1?"ammo":"grenade");
+}
+function resize(){const r=box.getBoundingClientRect();renderer.setSize(r.width,Math.max(300,r.height),false);camera.aspect=r.width/Math.max(300,r.height);camera.updateProjectionMatrix()}
+function showStart(){
+ box.innerHTML='<div id="isHud" class="islandHud"></div><div id="isMsg" class="islandMsg">🌴 ISLAND ASSAULT 3D<br><small>Offene Insel • Camps • Fahrzeuge • Missionen</small></div><div class="islandCross">+</div>'+
+ '<div class="islandTouch"><button id="isLeft">◀</button><button id="isFire">🔫</button><button id="isRight">▶</button></div>'+
+ '<div class="islandMove"><button id="isForward">▲</button><button id="isBack">▼</button><button id="isJump">↟</button></div>'+
+ '<div class="islandExtra"><button id="isSprint">🏃</button><button id="isGrenade">💣</button><button id="isWeapon">🔄</button><button id="isEnter">🚙</button></div>'+
+ '<div id="isMap" class="islandMap">N<br>•<br>•<br>•</div><button id="isPause">⏸</button><canvas></canvas>';
+ makeWorld();hud();resize();
+ window.addEventListener("resize",resize);
+ let lastX=0,lastY=0,drag=false;
+ box.onpointerdown=e=>{if(e.target.tagName==="BUTTON")return;drag=true;lastX=e.clientX;lastY=e.clientY};
+ box.onpointerup=box.onpointercancel=()=>drag=false;
+ box.onpointermove=e=>{if(!started||paused||!drag)return;yaw-=(e.clientX-lastX)*.004;pitch-=(e.clientY-lastY)*.003;pitch=Math.max(-1.2,Math.min(1.2,pitch));lastX=e.clientX;lastY=e.clientY};
+ const bind=(id,k)=>{const b=box.querySelector(id);b.onpointerdown=e=>{e.preventDefault();keys[k]=1};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>keys[k]=0};
+ bind("#isForward","w");bind("#isBack","s");bind("#isLeft","a");bind("#isRight","d");bind("#isSprint","shift");
+ box.querySelector("#isFire").onpointerdown=e=>{e.preventDefault();fire()};
+ box.querySelector("#isJump").onpointerdown=e=>{e.preventDefault();jump()};
+ box.querySelector("#isGrenade").onpointerdown=e=>{e.preventDefault();throwGrenade()};
+ box.querySelector("#isWeapon").onclick=()=>{weapon=(weapon+1)%weapons.length;ammo=Math.min(ammo,weapons[weapon].max);hud()};
+ box.querySelector("#isEnter").onclick=toggleVehicle;
+ box.querySelector("#isPause").onclick=()=>{paused=!paused;box.querySelector("#isPause").textContent=paused?"▶":"⏸"};
+ started=true;box.querySelector("#isMsg").style.opacity=".35";raf=requestAnimationFrame(loop);
+}
+let keys={},verticalVel=0,onGround=true;
+function jump(){if(onGround&&!inVehicle){verticalVel=6.5;onGround=false}}
+function fire(){
+ if(!started||paused||shootCd>0||ammo<=0)return;
+ const w=weapons[weapon];ammo--;shootCd=w.cool;hud();
+ const ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2(0,0),camera);
+ const hits=ray.intersectObjects(enemies,true);
+ if(hits.length&&hits[0].distance<70){
+  let e=hits[0].object;while(e.parent&&!e.userData.hp)e=e.parent;
+  if(e.userData.hp){e.userData.hp-=w.damage;score+=w.damage*20;e.userData.alert=true;
+   if(e.userData.hp<=0){scene.remove(e);enemies.splice(enemies.indexOf(e),1);score+=120;mission++;missionStep=Math.min(3,mission);hud();if(mission>=12)end("🏆 Insel gesichert!")}
+  }
+ }else{
+  const d=new THREE.Vector3();camera.getWorldDirection(d);const b=new THREE.Mesh(new THREE.SphereGeometry(.07,6,6),mat(0xffff88));
+  b.position.copy(camera.position);scene.add(b);bullets.push({m:b,d});
+ }
+}
+function throwGrenade(){
+ if(grenades<=0||paused||!started)return;grenades--;hud();
+ const g=new THREE.Mesh(new THREE.SphereGeometry(.18,8,8),mat(0x202020));g.position.copy(camera.position);
+ const d=new THREE.Vector3();camera.getWorldDirection(d);scene.add(g);grenadesFx.push({m:g,d:d.clone(),t:0});
+}
+function explosion(p){
+ const ring=new THREE.Mesh(new THREE.SphereGeometry(2.5,12,8),new THREE.MeshBasicMaterial({color:0xff8c22,transparent:true,opacity:.5}));
+ ring.position.copy(p);scene.add(ring);particles.push({m:ring,t:.35});
+ enemies.slice().forEach(e=>{if(e.position.distanceTo(p)<7){e.userData.hp=0;scene.remove(e);enemies.splice(enemies.indexOf(e),1);score+=150;mission++;missionStep=Math.min(3,mission)}});hud();
+}
+function toggleVehicle(){
+ if(!vehicle){
+  let best=null,bd=6;cars.forEach(c=>{const d=c.position.distanceTo(camera.position);if(d<bd){bd=d;best=c}});
+  if(best){vehicle=best;inVehicle=true;camera.position.set(vehicle.position.x,2.8,vehicle.position.z+6);hud()}
+ }else{inVehicle=false;vehicle=null;vehicleSpeed=0;hud()}
+}
+function end(t){
+ started=false;box.insertAdjacentHTML("beforeend",'<div class="islandResult"><h2>'+t+'</h2><p>⭐ Punkte: '+score+'<br>🎯 Gegner: '+mission+'/12</p><button id="isAgain">🔄 Nochmal</button></div>');
+ box.querySelector("#isAgain").onclick=()=>islandShooter();
+}
+function loop(){
+ if(!renderer)return;const dt=Math.min(clock.getDelta(),.05);shootCd=Math.max(0,shootCd-dt);
+ if(started&&!paused){
+  const speed=(keys.shift&&stamina>1?9:5)*(inVehicle?2.4:1);
+  if(keys.shift)stamina=Math.max(0,stamina-35*dt);else stamina=Math.min(100,stamina+22*dt);
+  const dir=new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw)),side=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
+  if(inVehicle){
+   if(keys.w)vehicleSpeed=Math.min(18,vehicleSpeed+12*dt);else if(keys.s)vehicleSpeed=Math.max(-6,vehicleSpeed-12*dt);else vehicleSpeed*=.96;
+   vehicle.position.addScaledVector(dir,-vehicleSpeed*dt);vehicle.rotation.y=yaw+Math.PI;
+   camera.position.lerp(new THREE.Vector3(vehicle.position.x,3.1,vehicle.position.z+7),.18);
+  }else{
+   if(keys.w)camera.position.addScaledVector(dir,-speed*dt);if(keys.s)camera.position.addScaledVector(dir,speed*dt);
+   if(keys.a)camera.position.addScaledVector(side,-speed*dt);if(keys.d)camera.position.addScaledVector(side,speed*dt);
+   verticalVel-=17*dt;camera.position.y+=verticalVel*dt;if(camera.position.y<=2.2){camera.position.y=2.2;verticalVel=0;onGround=true}
+  }
+  camera.position.x=Math.max(-W+8,Math.min(W-8,camera.position.x));camera.position.z=Math.max(-W+8,Math.min(W-8,camera.position.z));
+  camera.rotation.order="YXZ";camera.rotation.y=yaw;camera.rotation.x=pitch;
+  enemies.forEach(e=>{
+   const dx=camera.position.x-e.position.x,dz=camera.position.z-e.position.z,dist=Math.hypot(dx,dz);
+   e.lookAt(camera.position.x,1,e.position.z);if(dist>3)e.position.add(new THREE.Vector3(dx/dist,0,dz/dist).multiplyScalar(e.userData.speed*dt));
+   e.userData.cool-=dt;
+   if(dist<18&&e.userData.cool<=0){e.userData.cool=1.5;if(Math.random()<.65){health-=6;wanted=Math.min(100,wanted+8);hud();if(health<=0)end("💀 Mission gescheitert")}}
+  });
+  pickups.forEach((p,i)=>{p.rotation.y+=dt*2;p.rotation.x+=dt;if(p.position.distanceTo(camera.position)<2.5){
+   if(p.userData.kind==="ammo")ammo=Math.min(weapons[weapon].max,ammo+15);else if(p.userData.kind==="med")health=Math.min(100,health+25);else grenades=Math.min(5,grenades+1);
+   scene.remove(p);pickups.splice(i,1);hud();
+  }});
+  bullets.forEach((b,i)=>{b.m.position.addScaledVector(b.d,35*dt);if(b.m.position.distanceTo(camera.position)>100){scene.remove(b.m);bullets.splice(i,1)}});
+  grenadesFx.forEach((g,i)=>{g.t+=dt;g.m.position.addScaledVector(g.d,13*dt);g.d.y-=8*dt;if(g.t>1.2){explosion(g.m.position);scene.remove(g.m);grenadesFx.splice(i,1)}});
+  particles.forEach((p,i)=>{p.t-=dt;p.m.scale.multiplyScalar(1+dt*4);p.m.material.opacity=Math.max(0,p.t*1.5);if(p.t<=0){scene.remove(p.m);particles.splice(i,1)}});
+  if(mission<12&&enemies.length<9&&Math.random()<dt*.08)addEnemy();
+  const map=box.querySelector("#isMap");if(map)map.innerHTML="N<br><span>•</span><br><span>•</span><br>🏕️";
+ }
+ renderer.render(scene,camera);raf=requestAnimationFrame(loop);
+}
+showStart();
+}window.islandShooter=islandShooter})()
